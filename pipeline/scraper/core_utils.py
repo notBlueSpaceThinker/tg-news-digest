@@ -1,8 +1,11 @@
 import json
-import requests
 from dataclasses import dataclass, field
-from pathlib import Path
 from datetime import date, datetime
+from pathlib import Path
+from email.utils import parsedate_to_datetime
+
+import requests
+
 
 @dataclass
 class ScrapingConfig:
@@ -17,6 +20,15 @@ class ScrapingConfig:
 
     @classmethod
     def load_config(cls, path_to_config: Path | str) -> "ScrapingConfig":
+        """
+        Load scraping configurations from a JSON file.
+
+        Args:
+            path_to_config (Path | str): Path to the JSON config file.
+
+        Returns:
+            ScrapingConfig: An instance of the class with loaded data.
+        """
         with open(path_to_config, "r", encoding="utf-8") as file:
             config_data = json.load(file)
 
@@ -33,13 +45,14 @@ class WrongCrawlerType(Exception):
     Raised then crawler type is not found in config.
     """
 
+
 def make_request(url: str, config: ScrapingConfig) -> requests.models.Response:
     """
     Deliver a response from a request with given configuration.
 
     Args:
         url (str): Site url.
-        config (Config): Configuration.
+        config (ScrapingConfig): Configuration.
 
     Returns:
         requests.models.Response: A response from a request.
@@ -49,9 +62,33 @@ def make_request(url: str, config: ScrapingConfig) -> requests.models.Response:
         headers=config.headers,
         timeout=config.timeout,
     )
-
+    response.encoding = config.encoding
     return response
 
+
 def parse_and_format_pub_date(pub_date: str) -> date:
-    dt = datetime.strptime(pub_date, "%a, %d %b %Y %H:%M:%S %z")
-    return dt.date()
+    """
+    Parse pub_date from rss format into a date object.
+
+    Args:
+        pub_date (str): The raw publication date string extracted from the rss.
+
+    Raises:
+        ValueError: If the input string does not match any supported date formats.
+
+    Returns:
+        date: A datetime.date object.
+    """
+    try:
+        dt = datetime.strptime(pub_date, "%a, %d %b %Y %H:%M:%S %z")
+        return dt.date()
+    except Exception:
+        pass
+
+    try:
+        dt = datetime.strptime(pub_date, "%Y-%m-%d %H:%M:%S %z")
+        return dt.date()
+    except ValueError:
+        pass
+
+    raise ValueError

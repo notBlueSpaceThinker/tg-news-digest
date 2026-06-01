@@ -1,15 +1,20 @@
-from pipeline.scraper.core_utils import make_request, parse_and_format_pub_date, ScrapingConfig, WrongCrawlerType
-from requests.exceptions import RequestException
 from bs4 import BeautifulSoup
+from requests.exceptions import RequestException
+
 from config import TODAY_DATE
+from pipeline.scraper.core_utils import (
+        ScrapingConfig,
+        WrongCrawlerType,
+        make_request,
+        parse_and_format_pub_date
+    )
 
 
 class BaseCrawler:
     """
-    Abstract basic class for crawlers.
+    Base class for crawlers.
 
-    Each child class should implement "crawler_type" attribute and
-    implement "find_urls" function.
+    Each child class should implement "crawler_type" attribute.
     """
     crawler_type: str = ""
 
@@ -20,7 +25,6 @@ class BaseCrawler:
         Raises:
             WrongCrawlerType: If "crawler_type" not in "config.rss_urls".
         """
-        super().__init__()
         self.config = config
         rss_url = config.rss_urls.get(self.crawler_type, "")
         if not rss_url:
