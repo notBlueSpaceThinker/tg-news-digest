@@ -1,0 +1,16 @@
+{
+    "rss_urls": {
+        "nnru": "https://www.nn.ru/rss-feeds/rss.xml",
+        "niannru": "https://www.niann.ru/rss",
+        "nnewsnnovru": "https://nnews.nnov.ru/rss"
+    },
+    "headers": {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+        "Accept-Language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Accept-Encoding": "gzip, deflate, br, zstd",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+        "Cookie": "__ddg1_=mjDHCqwcJ0WCesQvGNLW; ngs_uid=wxPcDGoYKLSc8sflA5jgAg==; mdash_visitor_id=vis_019e6e5f-0622-789c-be6e-fb49a21a0db8; _ym_uid=1779968182593406469; _ym_d=1779968182; jtnews_a_template=true; ump_consent_notification=true; _ym_isad=1; __ddgid_=4oU46qVqMHp7r2Ff; __ddgmark_=qQyq6Fsvf1dJ2WvK; __ddg5_=Pq1jUAo87Vy02elf; __ddg2_=9KauX1DP0g0yyiw8; __ddg9_=144.31.3.101; _ym_visorc=b; __ddg10_=1780316273; __ddg8_=wbHZJylNkld48itR"
+    },
+    "encoding": "utf-8",
+    "timeout": 10
+}
