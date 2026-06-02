@@ -1,7 +1,9 @@
 import hashlib
 import json
 
+from collections.abc import Iterable
 from config import DATA_META_PATH, DATA_PATH, DATA_RAW_PATH, TODAY_DATE
+import json
 
 HASHED_URLS_JSON = DATA_PATH / str(TODAY_DATE) / "hashed_urls.json"
 
@@ -95,6 +97,20 @@ def save_to_raw(url: str, text: str) -> str:
         file.write(text)
     return hashed_url
 
+def get_raw_texts() -> Iterable:
+    """
+    Iterates over DATA_RAW_PATH and yields hashed urls and
+    corresponding texts.
+
+    Yields:
+        Iterator[Iterable]: Hashed url with corresponding raw text.
+    """
+    for file_path in DATA_RAW_PATH.glob("*.txt"):
+        url_hash = file_path.stem
+        with open(file_path, "r", encoding="utf-8") as file:
+            yield (url_hash, file.read())
+
+
 def load_from_meta():
     """_summary_
     """
@@ -105,3 +121,8 @@ def save_to_meta(url: str, meta: dict) -> str:
     """
     pass
 
+def get_meta_datas() -> Iterable:
+    for file_path in DATA_META_PATH.glob("*.json"):
+        url_hash = file_path.stem
+        with open(file_path, "r", encoding="utf-8") as file:
+            yield (url_hash, json.load(file))

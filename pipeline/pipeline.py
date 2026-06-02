@@ -1,10 +1,8 @@
-from utils import io
-
 from config import SCRAPING_CONFIG
 from pipeline.scraping.core_utils import ScrapingConfig
 from pipeline.scraping.crawlers import NIANNCrawler, NNCrawler, NNEWSCrawler
 from pipeline.scraping.parsers import NIANNParser, NNEWSParser, NNPasrser
-
+from utils import io
 
 io.ensure_data_paths()
 
