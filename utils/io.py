@@ -2,21 +2,18 @@ import hashlib
 import json
 import re
 from collections.abc import Iterable
+from typing import Literal
 
-from config import (DATA_CLEANED_PATH, DATA_LEMMATIZED_PATH, DATA_META_PATH,
-                    DATA_NER_PATH, DATA_PATH, DATA_RAW_PATH,
-                    DATA_ZERO_SHOT_PATH, TODAY_DATE)
-
+from config import DATA_PATHS, DATA_PATH, TODAY_DATE
 HASHED_URLS_JSON = DATA_PATH / str(TODAY_DATE) / "hashed_urls.json"
+
 
 def ensure_data_paths() -> None:
     """
     Create directiories if they do not exist.
     """
-    DATA_META_PATH.mkdir(parents=True, exist_ok=True)
-    DATA_RAW_PATH.mkdir(parents=True, exist_ok=True)
-    DATA_CLEANED_PATH.mkdir(parents=True, exist_ok=True)
-    DATA_LEMMATIZED_PATH.mkdir(parents=True, exist_ok=True)
+    for path in DATA_PATHS.values():
+        path.mkdir(parents=True, exist_ok=True)
 
 
 def hash_url(url: str) -> str:
@@ -78,266 +75,117 @@ def save_url_to_hash(url: str) -> str:
 
     return hashed_url
 
+class FileHandler:
+    def __init__(
+            self,
+            data_path: Literal[
+                "raw",
+                "cleaned",
+                "lemmatized",
+                "meta",
+                "zero-shot",
+                "ner"
+            ]
+        ) -> None:
+        """
+        Initialize FileHandler for a certain data type
 
-def load_from_raw(url: str) -> str:
-    """
-    Load the saved raw article, using URL.
+        Args:
+            data_path (Literal): Data name (for instance: "raw", "meta", etc.)
 
-    Args:
-        url (str): The URL of the article.
+        Raises:
+            NotImplementedError: If given unsupported data name.
+        """
+        if data_path not in DATA_PATHS:
+            raise NotImplementedError(
+                f"The data path: {data_path} is not allowed"
+            )
+        self.data_path = data_path
+        self.directory = DATA_PATHS[data_path]
 
-    Returns:
-        str: The raw text extracted from the corresponding file.
-    """
-    hashed_url = hash_url(url)
-    with open(DATA_RAW_PATH / f"{hashed_url}.txt", "r", encoding="utf-8") as file:
-        return file.read()
+        if self.data_path in ("raw", "cleaned", "lemmatized"):
+            self.data_type = ".txt"
+        elif self.data_path in ("meta", "zero-shot", "ner"):
+            self.data_type = ".json"
 
-def save_to_raw(url: str, text: str) -> str:
-    """
-    Save the raw text to a txt file and get it hashed name.
+    def load(self, url: str) -> str | dict:
+        """
+        Load the saved data, using URL.
 
-    Args:
-        url (str): The URL of the article.
-        text (str): The raw text of the article.
+        Args:
+            url (str): The URL of the article.
 
-    Returns:
-        str: The generated 64-character SHA-256 hash string.
-    """
-    hashed_url = hash_url(url)
-    with open(DATA_RAW_PATH / f"{hashed_url}.txt", "w", encoding="utf-8") as file:
-        file.write(text)
-    return hashed_url
-
-def get_raw_texts() -> Iterable:
-    """
-    Iterates over DATA_RAW_PATH and yields hashed urls and
-    corresponding texts.
-
-    Yields:
-        Iterator[Iterable]: Hashed url with corresponding raw text.
-    """
-    for file_path in DATA_RAW_PATH.glob("*.txt"):
-        url_hash = file_path.stem
+        Returns:
+            str | dict: Data from the corresponding file.
+        """
+        hashed_url = hash_url(url)
+        file_path = self.directory / f"{hashed_url}{self.data_type}"
         with open(file_path, "r", encoding="utf-8") as file:
-            yield (url_hash, file.read())
+            if self.data_type == ".json":
+                return json.load(file)
+            return file.read()
 
+    def save(self, url: str, data: str | dict) -> str:
+        """
+        Save the data to file and get it hashed name.
 
-def load_from_meta(url: str) -> dict:
-    """
-    Load the meta info, using URL.
+        Args:
+            url (str): The URL of the article.
+            data (str | dict): Data for saving.
 
-    Args:
-        url (str): The URL of the article.
+        Returns:
+            str: The generated 64-character SHA-256 hash string.
+        """
+        hashed_url = hash_url(url)
+        file_path = self.directory / f"{hashed_url}{self.data_type}"
+        with open(file_path, "w", encoding="utf-8") as file:
+            if self.data_type == ".json":
+                if not isinstance(data, dict):
+                    raise TypeError
+                json.dump(data, file)
+            else:
+                if not isinstance(data, str):
+                    raise TypeError
+                file.write(data)
+        return hashed_url
 
-    Returns:
-        str: The meta dict from the corresponding file.
-    """
-    hashed_url = hash_url(url)
-    with open(DATA_META_PATH / f"{hashed_url}.json", "r", encoding="utf-8") as file:
-        return json.load(file)
+    def yield_all(self) -> Iterable[tuple[str, str | dict]]:
+        """
+        Iterates over the files from the given directory.
 
-def save_to_meta(url: str, data: dict) -> str:
-    """
-    Save the meta dict to a json file and get it hashed name.
+        Yields:
+            Iterator[Iterable]: Tuple of (hashed url, data content).
+        """
+        for file_path in self.directory.glob(f"*{self.data_type}"):
+                url_hash = file_path.stem
+                with open(file_path, "r", encoding="utf-8") as file:
+                    if self.data_type == ".json":
+                        yield url_hash, json.load(file)
+                    else:
+                        yield url_hash, file.read()
 
-    Args:
-        url (str): The URL of the article.
-        text (str): The meta dict.
+class TextFileHandler(FileHandler):
+    def load(self, url: str) -> str:
+        data = super().load(url)
+        if not isinstance(data, str):
+            raise TypeError
+        return data
 
-    Returns:
-        str: The generated 64-character SHA-256 hash string.
-    """
-    hashed_url = hash_url(url)
-    with open(DATA_META_PATH / f"{hashed_url}.json", "w", encoding="utf-8") as file:
-        json.dump(data, file)
-    return hashed_url
+    def yield_all(self) -> Iterable[tuple[str, str]]:
+        for hashed_url, data in super().yield_all():
+            if not isinstance(data, str):
+                raise NotImplementedError
+            yield hashed_url, data
 
-def get_meta_datas() -> Iterable:
-    """
-    Iterates over DATA_META_PATH and yields hashed urls and
-    corresponding meta jsons.
+class JsonFileHandler(FileHandler):
+    def load(self, url: str) -> dict:
+        data = super().load(url)
+        if not isinstance(data, dict):
+            raise TypeError
+        return data
 
-    Yields:
-        Iterator[Iterable]: Hashed url with corresponding meta data.
-    """
-    for file_path in DATA_META_PATH.glob("*.json"):
-        url_hash = file_path.stem
-        with open(file_path, "r", encoding="utf-8") as file:
-            yield (url_hash, json.load(file))
-
-
-def load_from_cleaned(url: str) -> str:
-    """
-    Load the saved cleaned article, using URL.
-
-    Args:
-        url (str): The URL of the article.
-
-    Returns:
-        str: The cleaned text extracted from the corresponding file.
-    """
-    hashed_url = hash_url(url)
-    with open(DATA_CLEANED_PATH / f"{hashed_url}.txt", "r", encoding="utf-8") as file:
-        return file.read()
-
-def save_to_cleaned(url: str, text: str) -> str:
-    """
-    Save the cleaned text to a txt file and get it hashed name.
-
-    Args:
-        url (str): The URL of the article.
-        text (str): The cleaned text of the article.
-
-    Returns:
-        str: The generated 64-character SHA-256 hash string.
-    """
-    hashed_url = hash_url(url)
-    with open(DATA_CLEANED_PATH / f"{hashed_url}.txt", "w", encoding="utf-8") as file:
-        file.write(text)
-    return hashed_url
-
-def get_cleaned_texts() -> Iterable:
-    """
-    Iterates over DATA_CLENED_PATH and yields hashed urls and
-    corresponding texts.
-
-    Yields:
-        Iterator[Iterable]: Hashed url with corresponding cleaned text.
-    """
-    for file_path in DATA_CLEANED_PATH.glob("*.txt"):
-        url_hash = file_path.stem
-        with open(file_path, "r", encoding="utf-8") as file:
-            yield (url_hash, file.read())
-
-
-def load_from_lemmatized(url: str) -> str:
-    """
-    Load the saved lemmatized article, using URL.
-
-    Args:
-        url (str): The URL of the article.
-
-    Returns:
-        str: The lemmatized text extracted from the corresponding file.
-    """
-    hashed_url = hash_url(url)
-    with open(DATA_LEMMATIZED_PATH / f"{hashed_url}.txt", "r", encoding="utf-8") as file:
-        return file.read()
-
-def save_to_lemmatized(url: str, text: str) -> str:
-    """
-    Save the lemmatized text to a txt file and get it hashed name.
-
-    Args:
-        url (str): The URL of the article.
-        text (str): The lemmatized text of the article.
-
-    Returns:
-        str: The generated 64-character SHA-256 hash string.
-    """
-    hashed_url = hash_url(url)
-    with open(DATA_LEMMATIZED_PATH / f"{hashed_url}.txt", "w", encoding="utf-8") as file:
-        file.write(text)
-    return hashed_url
-
-def get_lemmatized_texts() -> Iterable:
-    """
-    Iterates over DATA_LEMMATIZED_PATH and yields hashed urls and
-    corresponding texts.
-
-    Yields:
-        Iterator[Iterable]: Hashed url with corresponding lemmatized text.
-    """
-    for file_path in DATA_LEMMATIZED_PATH.glob("*.txt"):
-        url_hash = file_path.stem
-        with open(file_path, "r", encoding="utf-8") as file:
-            yield (url_hash, file.read())
-
-
-def load_from_ner(url: str) -> dict:
-    """
-    Load the saved ner response, using URL.
-
-    Args:
-        url (str): The URL of the article.
-
-    Returns:
-        str: The ner responce from the corresponding file.
-    """
-    hashed_url = hash_url(url)
-    with open(DATA_NER_PATH / f"{hashed_url}.json", "r", encoding="utf-8") as file:
-        return json.load(file)
-
-def save_to_ner(url: str, data: dict) -> str:
-    """
-    Save the ner responce to a json file and get it hashed name.
-
-    Args:
-        url (str): The URL of the article.
-        text (str): The ner responce dict.
-
-    Returns:
-        str: The generated 64-character SHA-256 hash string.
-    """
-    hashed_url = hash_url(url)
-    with open(DATA_NER_PATH / f"{hashed_url}.json", "w", encoding="utf-8") as file:
-        json.dump(data, file)
-    return hashed_url
-
-def get_ner_data() -> Iterable:
-    """
-    Iterates over DATA_NER_PATH and yields hashed urls and
-    corresponding ner data.
-
-    Yields:
-        Iterator[Iterable]: Hashed url with corresponding ner data.
-    """
-    for file_path in DATA_NER_PATH.glob("*.json"):
-        url_hash = file_path.stem
-        with open(file_path, "r", encoding="utf-8") as file:
-            yield (url_hash, json.load(file))
-
-
-def load_from_zero_shot(url: str) -> dict:
-    """
-    Load the saved zero-shot response, using URL.
-
-    Args:
-        url (str): The URL of the article.
-
-    Returns:
-        str: The zero-shot responce from the corresponding file.
-    """
-    hashed_url = hash_url(url)
-    with open(DATA_ZERO_SHOT_PATH / f"{hashed_url}.json", "r", encoding="utf-8") as file:
-        return json.load(file)
-
-def save_to_zero_shot(url: str, data: dict) -> str:
-    """
-    Save the zero-shot responce to a json file and get it hashed name.
-
-    Args:
-        url (str): The URL of the article.
-        text (str): The zero-shot responce dict.
-
-    Returns:
-        str: The generated 64-character SHA-256 hash string.
-    """
-    hashed_url = hash_url(url)
-    with open(DATA_ZERO_SHOT_PATH / f"{hashed_url}.json", "w", encoding="utf-8") as file:
-        json.dump(data, file)
-    return hashed_url
-
-def get_zero_shot_data() -> Iterable:
-    """
-    Iterates over DATA_NER_PATH and yields hashed urls and
-    corresponding zero-shot data.
-
-    Yields:
-        Iterator[Iterable]: Hashed url with corresponding zero-shot data.
-    """
-    for file_path in DATA_ZERO_SHOT_PATH.glob("*.json"):
-        url_hash = file_path.stem
-        with open(file_path, "r", encoding="utf-8") as file:
-            yield (url_hash, json.load(file))
+    def yield_all(self) -> Iterable[tuple[str, dict]]:
+        for hashed_url, data in super().yield_all():
+            if not isinstance(data, dict):
+                raise NotImplementedError
+            yield hashed_url, data

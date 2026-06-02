@@ -27,39 +27,48 @@ def run_scraping_pipeline() -> None:
     }
     for portal_name, crawler in crawlers.items():
         urls = crawler.find_urls()
+        raw_handler = io.TextFileHandler("raw")
+        meta_handler = io.JsonFileHandler("meta")
         for url in urls:
             parser = parsers[portal_name](url, config)
 
-            io.save_to_raw(url, parser.parse_raw_text())
-            io.save_to_meta(url, parser.parse_meta_data())
+            raw_handler.save(url, parser.parse_raw_text())
+            meta_handler.save(url, parser.parse_meta_data())
 
 
 def run_preprocessing_pipeline() -> None:
     """
     Execute the text preprocessing pipeline.
     """
-    for hashed_url, text in io.get_raw_texts():
+    raw_handler = io.TextFileHandler("raw")
+    cleaned_handler = io.TextFileHandler("cleaned")
+    lemmatized_handler = io.TextFileHandler("lemmatized")
+    for hashed_url, text in raw_handler.yield_all():
         cleaned_text = clean(text)
         removed_stop_words = remove_stop_words(word_tokenize(cleaned_text))
         if isinstance(removed_stop_words, str):
             removed_stop_words = word_tokenize(removed_stop_words)
         lemmatized_text = lemmatize(removed_stop_words, concat=True)
 
-        io.save_to_cleaned(hashed_url, cleaned_text)
-        io.save_to_lemmatized(hashed_url, str(lemmatized_text))
+        cleaned_handler.save(hashed_url, cleaned_text)
+        lemmatized_handler.save(hashed_url, str(lemmatized_text))
 
 
 def run_inference_pipeline() -> None:
     """
     Execute model inference pipeline.
     """
-    for hashed_url, text in io.get_cleaned_texts():
+    cleaned_handler = io.TextFileHandler("cleaned")
+    zero_shot_handler = io.JsonFileHandler("zero-shot")
+    for hashed_url, text in cleaned_handler.yield_all():
         zero_shot = run_zero_shot(text)
-        io.save_to_zero_shot(hashed_url, zero_shot)
+        zero_shot_handler.save(hashed_url, zero_shot)
 
-    for hashed_url, text in io.get_raw_texts():
+    raw_handler = io.TextFileHandler("raw")
+    ner_handler = io.JsonFileHandler("ner")
+    for hashed_url, text in raw_handler.yield_all():
         ner = run_ner(text)
-        io.save_to_ner(hashed_url, ner)
+        ner_handler.save(hashed_url, ner)
 
 
 def run_analytics_pipeline() -> None:
