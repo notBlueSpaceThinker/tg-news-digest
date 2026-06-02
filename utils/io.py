@@ -1,5 +1,6 @@
 import hashlib
 import json
+import re
 from collections.abc import Iterable
 
 from config import (DATA_CLEANED_PATH, DATA_LEMMATIZED_PATH, DATA_META_PATH,
@@ -21,12 +22,17 @@ def hash_url(url: str) -> str:
     """
     Generate a unique SHA-256 hash string for a given URL.
 
+    If the input string matches the pattern of a valid SHA-256 hex hash,
+    it returns it to prevent double-hashing.
     Args:
         url (str): Target URL.
 
     Returns:
         str: A 64-character hexadecimal SHA-256 hash string.
     """
+    if re.match(r"^[0-9a-fA-F]{64}$", url):
+        return url
+
     return hashlib.sha256(url.encode()).hexdigest()
 
 
@@ -116,7 +122,7 @@ def get_raw_texts() -> Iterable:
             yield (url_hash, file.read())
 
 
-def load_from_meta():
+def load_from_meta() -> dict:
     """_summary_
     """
     pass
