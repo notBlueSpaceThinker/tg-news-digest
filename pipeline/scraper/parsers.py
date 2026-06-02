@@ -1,5 +1,7 @@
-from pipeline.scraper.core_utils import ScrapingConfig, make_request
 from bs4 import BeautifulSoup
+
+from pipeline.scraper.core_utils import ScrapingConfig, make_request
+
 
 class BaseParser():
     """

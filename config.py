@@ -1,6 +1,7 @@
 from datetime import date
 from pathlib import Path
 
+
 TODAY_DATE = date.today()
 
 

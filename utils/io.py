@@ -1,6 +1,8 @@
 import hashlib
 import json
-from config import DATA_RAW_PATH, DATA_META_PATH, DATA_PATH, TODAY_DATE
+
+from config import DATA_META_PATH, DATA_PATH, DATA_RAW_PATH, TODAY_DATE
+
 
 HASHED_URLS_JSON = DATA_PATH / str(TODAY_DATE) / "hashed_urls.json"
 
@@ -10,7 +12,6 @@ def ensure_data_paths() -> None:
     """
     DATA_META_PATH.mkdir(parents=True, exist_ok=True)
     DATA_RAW_PATH.mkdir(parents=True, exist_ok=True)
-
 
 
 def hash_url(url: str) -> str:

@@ -1,3 +1,7 @@
 beautifulsoup4==4.14.3
 lxml==5.3.2
 requests==2.33.1
+pymorphy3==2.0.6
+pymorphy3-dicts-ru==2.4.417150.4580142
+nltk==3.9.4
+matplotlib==3.10.9

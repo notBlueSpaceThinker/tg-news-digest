@@ -2,12 +2,9 @@ from bs4 import BeautifulSoup
 from requests.exceptions import RequestException
 
 from config import TODAY_DATE
-from pipeline.scraper.core_utils import (
-        ScrapingConfig,
-        WrongCrawlerType,
-        make_request,
-        parse_and_format_pub_date
-    )
+from pipeline.scraper.core_utils import (ScrapingConfig, WrongCrawlerType,
+                                         make_request,
+                                         parse_and_format_pub_date)
 
 
 class BaseCrawler:
