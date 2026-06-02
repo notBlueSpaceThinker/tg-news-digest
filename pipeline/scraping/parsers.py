@@ -51,7 +51,7 @@ class BaseParser():
             f"Method should be implemented in child class: {self.parse_meta_data.__name__}"
         )
 
-class NNPasrser(BaseParser):
+class NNParser(BaseParser):
     """
     Parser for extracting raw text and metadata from the nn.ru portal.
     https://www.nn.ru/

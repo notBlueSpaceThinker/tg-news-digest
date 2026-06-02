@@ -1,15 +1,19 @@
 from config import SCRAPING_CONFIG
+from pipeline.inference.inference import run_ner, run_zero_shot
 from pipeline.preprocessing.preprocessing import (clean, lemmatize,
                                                   remove_stop_words,
                                                   word_tokenize)
 from pipeline.scraping.core_utils import ScrapingConfig
 from pipeline.scraping.crawlers import NIANNCrawler, NNCrawler, NNEWSCrawler
-from pipeline.scraping.parsers import NIANNParser, NNEWSParser, NNPasrser
+from pipeline.scraping.parsers import NIANNParser, NNEWSParser, NNParser
 from utils import io
 
 io.ensure_data_paths()
 
 def run_scraping_pipeline() -> None:
+    """
+    Execute the web scraping pipeline.
+    """
     config = ScrapingConfig().load_config(SCRAPING_CONFIG)
     crawlers = {
         "NIANN": NIANNCrawler(config),
@@ -18,7 +22,7 @@ def run_scraping_pipeline() -> None:
     }
     parsers = {
         "NIANN": NIANNParser,
-        "NN": NNPasrser,
+        "NN": NNParser,
         "NNEWS": NNEWSParser
     }
     for portal_name, crawler in crawlers.items():
@@ -31,6 +35,9 @@ def run_scraping_pipeline() -> None:
 
 
 def run_preprocessing_pipeline() -> None:
+    """
+    Execute the text preprocessing pipeline.
+    """
     for hashed_url, text in io.get_raw_texts():
         cleaned_text = clean(text)
         removed_stop_words = remove_stop_words(word_tokenize(cleaned_text))
@@ -43,14 +50,29 @@ def run_preprocessing_pipeline() -> None:
 
 
 def run_inference_pipeline() -> None:
-    pass
+    """
+    Execute model inference pipeline.
+    """
+    for hashed_url, text in io.get_cleaned_texts():
+        zero_shot = run_zero_shot(text)
+        io.save_to_zero_shot(hashed_url, zero_shot)
+
+    for hashed_url, text in io.get_raw_texts():
+        ner = run_ner(text)
+        io.save_to_ner(hashed_url, ner)
 
 
 def run_analytics_pipeline() -> None:
+    """
+    Generate corpus statistics and save visualization reports.
+    """
     pass
 
 
 def run_full_pipeline() -> None:
+    """
+    Orchestrate all the pipelines and run them.
+    """
     run_scraping_pipeline()
     run_preprocessing_pipeline()
     run_inference_pipeline()

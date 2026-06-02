@@ -4,7 +4,8 @@ import re
 from collections.abc import Iterable
 
 from config import (DATA_CLEANED_PATH, DATA_LEMMATIZED_PATH, DATA_META_PATH,
-                    DATA_PATH, DATA_RAW_PATH, TODAY_DATE)
+                    DATA_NER_PATH, DATA_PATH, DATA_RAW_PATH,
+                    DATA_ZERO_SHOT_PATH, TODAY_DATE)
 
 HASHED_URLS_JSON = DATA_PATH / str(TODAY_DATE) / "hashed_urls.json"
 
@@ -122,15 +123,35 @@ def get_raw_texts() -> Iterable:
             yield (url_hash, file.read())
 
 
-def load_from_meta() -> dict:
-    """_summary_
+def load_from_meta(url: str) -> dict:
     """
-    pass
+    Load the meta info, using URL.
 
-def save_to_meta(url: str, meta: dict) -> str:
-    """_summary_
+    Args:
+        url (str): The URL of the article.
+
+    Returns:
+        str: The meta dict from the corresponding file.
     """
-    pass
+    hashed_url = hash_url(url)
+    with open(DATA_META_PATH / f"{hashed_url}.json", "r", encoding="utf-8") as file:
+        return json.load(file)
+
+def save_to_meta(url: str, data: dict) -> str:
+    """
+    Save the meta dict to a json file and get it hashed name.
+
+    Args:
+        url (str): The URL of the article.
+        text (str): The meta dict.
+
+    Returns:
+        str: The generated 64-character SHA-256 hash string.
+    """
+    hashed_url = hash_url(url)
+    with open(DATA_META_PATH / f"{hashed_url}.json", "w", encoding="utf-8") as file:
+        json.dump(data, file)
+    return hashed_url
 
 def get_meta_datas() -> Iterable:
     """
@@ -232,3 +253,91 @@ def get_lemmatized_texts() -> Iterable:
         url_hash = file_path.stem
         with open(file_path, "r", encoding="utf-8") as file:
             yield (url_hash, file.read())
+
+
+def load_from_ner(url: str) -> dict:
+    """
+    Load the saved ner response, using URL.
+
+    Args:
+        url (str): The URL of the article.
+
+    Returns:
+        str: The ner responce from the corresponding file.
+    """
+    hashed_url = hash_url(url)
+    with open(DATA_NER_PATH / f"{hashed_url}.json", "r", encoding="utf-8") as file:
+        return json.load(file)
+
+def save_to_ner(url: str, data: dict) -> str:
+    """
+    Save the ner responce to a json file and get it hashed name.
+
+    Args:
+        url (str): The URL of the article.
+        text (str): The ner responce dict.
+
+    Returns:
+        str: The generated 64-character SHA-256 hash string.
+    """
+    hashed_url = hash_url(url)
+    with open(DATA_NER_PATH / f"{hashed_url}.json", "w", encoding="utf-8") as file:
+        json.dump(data, file)
+    return hashed_url
+
+def get_ner_data() -> Iterable:
+    """
+    Iterates over DATA_NER_PATH and yields hashed urls and
+    corresponding ner data.
+
+    Yields:
+        Iterator[Iterable]: Hashed url with corresponding ner data.
+    """
+    for file_path in DATA_NER_PATH.glob("*.json"):
+        url_hash = file_path.stem
+        with open(file_path, "r", encoding="utf-8") as file:
+            yield (url_hash, json.load(file))
+
+
+def load_from_zero_shot(url: str) -> dict:
+    """
+    Load the saved zero-shot response, using URL.
+
+    Args:
+        url (str): The URL of the article.
+
+    Returns:
+        str: The zero-shot responce from the corresponding file.
+    """
+    hashed_url = hash_url(url)
+    with open(DATA_ZERO_SHOT_PATH / f"{hashed_url}.json", "r", encoding="utf-8") as file:
+        return json.load(file)
+
+def save_to_zero_shot(url: str, data: dict) -> str:
+    """
+    Save the zero-shot responce to a json file and get it hashed name.
+
+    Args:
+        url (str): The URL of the article.
+        text (str): The zero-shot responce dict.
+
+    Returns:
+        str: The generated 64-character SHA-256 hash string.
+    """
+    hashed_url = hash_url(url)
+    with open(DATA_ZERO_SHOT_PATH / f"{hashed_url}.json", "w", encoding="utf-8") as file:
+        json.dump(data, file)
+    return hashed_url
+
+def get_zero_shot_data() -> Iterable:
+    """
+    Iterates over DATA_NER_PATH and yields hashed urls and
+    corresponding zero-shot data.
+
+    Yields:
+        Iterator[Iterable]: Hashed url with corresponding zero-shot data.
+    """
+    for file_path in DATA_ZERO_SHOT_PATH.glob("*.json"):
+        url_hash = file_path.stem
+        with open(file_path, "r", encoding="utf-8") as file:
+            yield (url_hash, json.load(file))

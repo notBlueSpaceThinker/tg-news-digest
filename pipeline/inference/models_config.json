@@ -1,0 +1,29 @@
+{
+    "ner": {
+        "model_path": "Gherman/bert-base-NER-Russian",
+        "aggregation_strategy": "simple"
+    },
+
+    "zero-shot": {
+        "model_path": "cointegrated/rubert-tiny-bilingual-nli",
+        "categories": [
+            "healthcare",
+            "education",
+            "incidents",
+            "city-life",
+            "economics",
+            "sports",
+            "politics",
+            "food",
+            "entertainment",
+            "science-and-technology",
+            "weather",
+            "art",
+            "culture",
+            "celebrities",
+            "memes",
+            "war",
+            "miscellaneous"
+        ]
+    }
+}
