@@ -2,7 +2,6 @@ import json
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from pathlib import Path
-from email.utils import parsedate_to_datetime
 
 import requests
 
