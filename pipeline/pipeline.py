@@ -1,4 +1,6 @@
 from config import SCRAPING_CONFIG
+from pipeline.preprocessing.preprocessing import (clean, lemmatize,
+                                                  remove_stop_words)
 from pipeline.scraping.core_utils import ScrapingConfig
 from pipeline.scraping.crawlers import NIANNCrawler, NNCrawler, NNEWSCrawler
 from pipeline.scraping.parsers import NIANNParser, NNEWSParser, NNPasrser

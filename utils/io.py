@@ -1,9 +1,9 @@
 import hashlib
 import json
-
 from collections.abc import Iterable
-from config import DATA_META_PATH, DATA_PATH, DATA_RAW_PATH, TODAY_DATE
-import json
+
+from config import (DATA_CLEANED_PATH, DATA_LEMMATIZED_PATH, DATA_META_PATH,
+                    DATA_PATH, DATA_RAW_PATH, TODAY_DATE)
 
 HASHED_URLS_JSON = DATA_PATH / str(TODAY_DATE) / "hashed_urls.json"
 
@@ -13,6 +13,8 @@ def ensure_data_paths() -> None:
     """
     DATA_META_PATH.mkdir(parents=True, exist_ok=True)
     DATA_RAW_PATH.mkdir(parents=True, exist_ok=True)
+    DATA_CLEANED_PATH.mkdir(parents=True, exist_ok=True)
+    DATA_LEMMATIZED_PATH.mkdir(parents=True, exist_ok=True)
 
 
 def hash_url(url: str) -> str:
@@ -27,6 +29,7 @@ def hash_url(url: str) -> str:
     """
     return hashlib.sha256(url.encode()).hexdigest()
 
+
 def load_url_from_hash(hash: str) -> str | None:
     """
     Get the original URL from daily json.
@@ -40,6 +43,7 @@ def load_url_from_hash(hash: str) -> str | None:
     with open(HASHED_URLS_JSON, "r", encoding="utf-8") as file:
         storage = json.load(file)
     return storage.get(hash)
+
 
 def save_url_to_hash(url: str) -> str:
     """
@@ -66,6 +70,7 @@ def save_url_to_hash(url: str) -> str:
         json.dump(storage, file)
 
     return hashed_url
+
 
 def load_from_raw(url: str) -> str:
     """
@@ -122,7 +127,102 @@ def save_to_meta(url: str, meta: dict) -> str:
     pass
 
 def get_meta_datas() -> Iterable:
+    """
+    Iterates over DATA_META_PATH and yields hashed urls and
+    corresponding meta jsons.
+
+    Yields:
+        Iterator[Iterable]: Hashed url with corresponding meta data.
+    """
     for file_path in DATA_META_PATH.glob("*.json"):
         url_hash = file_path.stem
         with open(file_path, "r", encoding="utf-8") as file:
             yield (url_hash, json.load(file))
+
+
+def load_from_cleaned(url: str) -> str:
+    """
+    Load the saved cleaned article, using URL.
+
+    Args:
+        url (str): The URL of the article.
+
+    Returns:
+        str: The cleaned text extracted from the corresponding file.
+    """
+    hashed_url = hash_url(url)
+    with open(DATA_CLEANED_PATH / f"{hashed_url}.txt", "r", encoding="utf-8") as file:
+        return file.read()
+
+def save_to_cleaned(url: str, text: str) -> str:
+    """
+    Save the cleaned text to a txt file and get it hashed name.
+
+    Args:
+        url (str): The URL of the article.
+        text (str): The cleaned text of the article.
+
+    Returns:
+        str: The generated 64-character SHA-256 hash string.
+    """
+    hashed_url = hash_url(url)
+    with open(DATA_CLEANED_PATH / f"{hashed_url}.txt", "w", encoding="utf-8") as file:
+        file.write(text)
+    return hashed_url
+
+def get_cleaned_texts() -> Iterable:
+    """
+    Iterates over DATA_CLENED_PATH and yields hashed urls and
+    corresponding texts.
+
+    Yields:
+        Iterator[Iterable]: Hashed url with corresponding cleaned text.
+    """
+    for file_path in DATA_CLEANED_PATH.glob("*.txt"):
+        url_hash = file_path.stem
+        with open(file_path, "r", encoding="utf-8") as file:
+            yield (url_hash, file.read())
+
+
+def load_from_lemmatized(url: str) -> str:
+    """
+    Load the saved lemmatized article, using URL.
+
+    Args:
+        url (str): The URL of the article.
+
+    Returns:
+        str: The lemmatized text extracted from the corresponding file.
+    """
+    hashed_url = hash_url(url)
+    with open(DATA_LEMMATIZED_PATH / f"{hashed_url}.txt", "r", encoding="utf-8") as file:
+        return file.read()
+
+def save_to_lemmatized(url: str, text: str) -> str:
+    """
+    Save the lemmatized text to a txt file and get it hashed name.
+
+    Args:
+        url (str): The URL of the article.
+        text (str): The lemmatized text of the article.
+
+    Returns:
+        str: The generated 64-character SHA-256 hash string.
+    """
+    hashed_url = hash_url(url)
+    with open(DATA_LEMMATIZED_PATH / f"{hashed_url}.txt", "w", encoding="utf-8") as file:
+        file.write(text)
+    return hashed_url
+
+def get_lemmatized_texts() -> Iterable:
+    """
+    Iterates over DATA_LEMMATIZED_PATH and yields hashed urls and
+    corresponding texts.
+
+    Yields:
+        Iterator[Iterable]: Hashed url with corresponding lemmatized text.
+    """
+    for file_path in DATA_LEMMATIZED_PATH.glob("*.txt"):
+        url_hash = file_path.stem
+        with open(file_path, "r", encoding="utf-8") as file:
+            yield (url_hash, file.read())
