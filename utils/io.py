@@ -3,7 +3,6 @@ import json
 
 from config import DATA_META_PATH, DATA_PATH, DATA_RAW_PATH, TODAY_DATE
 
-
 HASHED_URLS_JSON = DATA_PATH / str(TODAY_DATE) / "hashed_urls.json"
 
 def ensure_data_paths() -> None:
@@ -101,7 +100,7 @@ def load_from_meta():
     """
     pass
 
-def save_to_meta():
+def save_to_meta(url: str, meta: dict) -> str:
     """_summary_
     """
     pass

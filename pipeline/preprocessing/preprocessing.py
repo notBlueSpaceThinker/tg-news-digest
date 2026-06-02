@@ -4,7 +4,7 @@ from string import punctuation
 import nltk
 import pymorphy3
 from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
+from nltk.tokenize import sent_tokenize, word_tokenize
 
 try:
     nltk.data.find("corpora/stopwords")
@@ -27,7 +27,7 @@ def tokenize_by_words(text: str) -> list[str]:
     Returns:
         list[str]: A list of extracted word tokens.
     """
-    return nltk.word_tokenize(text)
+    return word_tokenize(text)
 
 
 def tokenize_by_sentences(text: str) -> list[str]:
@@ -40,7 +40,7 @@ def tokenize_by_sentences(text: str) -> list[str]:
     Returns:
         list[str]: A list of extracted sentence tokens.
     """
-    return nltk.sent_tokenize(text)
+    return sent_tokenize(text)
 
 
 def clean(text: str) -> str:

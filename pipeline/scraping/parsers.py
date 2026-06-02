@@ -67,6 +67,9 @@ class NNPasrser(BaseParser):
 
         return " ".join(text)
 
+    def parse_meta_data(self) -> dict:
+        return {} #Not implemented yet
+
 
 class NIANNParser(BaseParser):
     """
@@ -85,6 +88,9 @@ class NIANNParser(BaseParser):
                 text.append(block.get_text())
         return " ".join(text)
 
+    def parse_meta_data(self) -> dict:
+        return {} #Not implemented yet
+
 class NNEWSParser(BaseParser):
     """
     Parser for extracting raw text and metadata from the nnews.nnov.ru portal.
@@ -99,3 +105,6 @@ class NNEWSParser(BaseParser):
             for block in text_blocks:
                 text.append(block.get_text())
         return " ".join(text)
+
+    def parse_meta_data(self) -> dict:
+        return {} #Not implemented yet
