@@ -8,6 +8,9 @@ from pipeline.scraping.crawlers import NIANNCrawler, NNCrawler, NNEWSCrawler
 from pipeline.scraping.parsers import NIANNParser, NNEWSParser, NNParser
 from utils import io
 
+from tqdm import tqdm
+
+
 io.ensure_data_paths()
 
 def run_scraping_pipeline() -> None:
@@ -29,7 +32,10 @@ def run_scraping_pipeline() -> None:
         urls = crawler.find_urls()
         raw_handler = io.TextFileHandler("raw")
         meta_handler = io.JsonFileHandler("meta")
-        for url in urls:
+        for url in tqdm(urls, desc=f"Parsing {portal_name}: "):
+            if raw_handler.check_if_saved(url) and \
+            meta_handler.check_if_saved(url):
+                continue
             parser = parsers[portal_name](url, config)
 
             raw_handler.save(url, parser.parse_raw_text())
@@ -43,7 +49,10 @@ def run_preprocessing_pipeline() -> None:
     raw_handler = io.TextFileHandler("raw")
     cleaned_handler = io.TextFileHandler("cleaned")
     lemmatized_handler = io.TextFileHandler("lemmatized")
-    for hashed_url, text in raw_handler.yield_all():
+    for hashed_url, text in tqdm(raw_handler.yield_all(), desc="Text preprocessing: "):
+        if cleaned_handler.check_if_saved(hashed_url) and \
+        lemmatized_handler.check_if_saved(hashed_url):
+            continue
         cleaned_text = clean(text)
         removed_stop_words = remove_stop_words(word_tokenize(cleaned_text))
         if isinstance(removed_stop_words, str):
@@ -60,14 +69,22 @@ def run_inference_pipeline() -> None:
     """
     cleaned_handler = io.TextFileHandler("cleaned")
     zero_shot_handler = io.JsonFileHandler("zero-shot")
-    for hashed_url, text in cleaned_handler.yield_all():
+    for hashed_url, text in tqdm(cleaned_handler.yield_all(), desc="Inference with zero-shot: "):
+        if zero_shot_handler.check_if_saved(hashed_url):
+            continue
         zero_shot = run_zero_shot(text)
+        if not zero_shot:
+            continue
         zero_shot_handler.save(hashed_url, zero_shot)
 
     raw_handler = io.TextFileHandler("raw")
     ner_handler = io.JsonFileHandler("ner")
-    for hashed_url, text in raw_handler.yield_all():
+    for hashed_url, text in tqdm(raw_handler.yield_all(), desc="Inference with ner: "):
+        if ner_handler.check_if_saved(hashed_url):
+            continue
         ner = run_ner(text)
+        if not ner:
+            continue
         ner_handler.save(hashed_url, ner)
 
 

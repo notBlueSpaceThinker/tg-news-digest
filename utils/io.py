@@ -75,6 +75,7 @@ def save_url_to_hash(url: str) -> str:
 
     return hashed_url
 
+
 class FileHandler:
     def __init__(
             self,
@@ -142,7 +143,7 @@ class FileHandler:
             if self.data_type == ".json":
                 if not isinstance(data, dict):
                     raise TypeError
-                json.dump(data, file)
+                json.dump(data, file, indent=4, ensure_ascii=False)
             else:
                 if not isinstance(data, str):
                     raise TypeError
@@ -164,6 +165,20 @@ class FileHandler:
                     else:
                         yield url_hash, file.read()
 
+    def check_if_saved(self, url: str) -> bool:
+        """
+        Checks if the URL is saved.
+
+        Args:
+            url (str): The URL of the article.
+
+        Returns:
+            bool: True if the file already exists, False otherwise.
+        """
+        hashed_url = hash_url(url)
+        return (self.directory / f"{hashed_url}{self.data_type}").is_file()
+
+
 class TextFileHandler(FileHandler):
     def load(self, url: str) -> str:
         data = super().load(url)
@@ -176,6 +191,7 @@ class TextFileHandler(FileHandler):
             if not isinstance(data, str):
                 raise NotImplementedError
             yield hashed_url, data
+
 
 class JsonFileHandler(FileHandler):
     def load(self, url: str) -> dict:

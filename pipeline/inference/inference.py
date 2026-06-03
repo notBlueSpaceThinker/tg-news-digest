@@ -68,10 +68,19 @@ zero_shot_model = Model(ModelConfig.load_config("zero-shot"))
 ner_model = Model(ModelConfig.load_config("ner"))
 
 
-def run_zero_shot(text: str) -> dict:
-    predict = zero_shot_model(text)
+def run_zero_shot(text: str) -> dict | None:
+    try:
+        predict = zero_shot_model(text)
+    except ValueError: #In case if no text included
+        return None
     del predict["sequence"]
     return predict
 
-def run_ner(text: str) -> dict:
-    return ner_model(text)
+def run_ner(text: str) -> dict | None:
+    try:
+        predict = ner_model(text)
+    except ValueError: #In case if no text included
+        return None
+    for entity in predict:
+        entity["score"] = float(entity["score"])
+    return {"predict": predict}
