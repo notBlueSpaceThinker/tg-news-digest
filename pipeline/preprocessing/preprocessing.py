@@ -1,5 +1,6 @@
 import re
 from string import punctuation
+from typing import Literal
 
 import nltk
 import pymorphy3
@@ -71,8 +72,7 @@ def clean(text: str) -> str:
         flags=re.UNICODE
     )
     text = emoji_pattern.sub(r"", text)
-    remove_punct = str.maketrans("", "", punctuation)
-    text = text.translate(remove_punct)
+    text = re.sub(r"[^\w\s-]", "", text)
     text = re.sub(r"\s+", " ", text)
     return text.strip()
 
@@ -114,3 +114,10 @@ def lemmatize(tokens: list[str], concat: bool = False) -> str | list[str]:
             for word in tokens
         ]
     return " ".join(lemmatized) if concat else lemmatized
+
+def normalize_name(word: str, tag: Literal["name", "surn"]) -> str:
+    for p in morph.parse(word):
+        if tag.capitalize() in p.tag:
+            if (inflected := p.inflect({'nomn', 'sing'})):
+                return inflected.word.capitalize()
+    return word.capitalize()
