@@ -1,6 +1,9 @@
 from datetime import date
 from pathlib import Path
 
+from environs import Env
+from environs.exceptions import EnvError
+
 TODAY_DATE = date.today()
 
 
@@ -26,3 +29,14 @@ DATA_PATHS = {
 SCRAPING_CONFIG = ROOT_PATH / "pipeline" / "scraping" / "scraper_config.json"
 
 MODELS_CONFIG = ROOT_PATH / "pipeline" / "inference" / "models_config.json"
+
+HF_TOKEN = None
+API_TOKEN = None
+
+try:
+    env = Env()
+    env.read_env(ROOT_PATH / ".env")
+    HF_TOKEN = env("HF_TOKEN")
+    API_TOKEN = env("API_TOKEN")
+except EnvError:
+    pass

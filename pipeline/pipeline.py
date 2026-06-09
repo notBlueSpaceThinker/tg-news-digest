@@ -1,3 +1,5 @@
+from tqdm import tqdm
+
 from config import SCRAPING_CONFIG
 from pipeline.inference.inference import run_ner, run_zero_shot
 from pipeline.preprocessing.preprocessing import (clean, lemmatize,
@@ -7,9 +9,6 @@ from pipeline.scraping.core_utils import ScrapingConfig
 from pipeline.scraping.crawlers import NIANNCrawler, NNCrawler, NNEWSCrawler
 from pipeline.scraping.parsers import NIANNParser, NNEWSParser, NNParser
 from utils import io
-
-from tqdm import tqdm
-
 
 io.ensure_data_paths()
 

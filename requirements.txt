@@ -6,3 +6,5 @@ pymorphy3-dicts-ru==2.4.417150.4580142
 nltk==3.9.4
 matplotlib==3.10.9
 torch==2.12.0
+transformers==5.9.0
+pyTelegramBotAPI==4.34.0

@@ -4,7 +4,8 @@ import re
 from collections.abc import Iterable
 from typing import Literal
 
-from config import DATA_PATHS, DATA_PATH, TODAY_DATE
+from config import DATA_PATH, DATA_PATHS, TODAY_DATE
+
 HASHED_URLS_JSON = DATA_PATH / str(TODAY_DATE) / "hashed_urls.json"
 
 
