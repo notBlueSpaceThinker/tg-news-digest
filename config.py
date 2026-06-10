@@ -1,11 +1,11 @@
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 from environs import Env
 from environs.exceptions import EnvError
+from matplotlib.colors import LinearSegmentedColormap
 
-TODAY_DATE = date.today()
-
+TODAY_DATE = date.today() - timedelta(days=0)
 
 ROOT_PATH = Path(__file__).parent
 DATA_PATH = ROOT_PATH / "data"
@@ -16,6 +16,7 @@ DATA_CLEANED_PATH = ROOT_PATH / DATA_PATH / str(TODAY_DATE) / "cleaned"
 DATA_LEMMATIZED_PATH = ROOT_PATH / DATA_PATH / str(TODAY_DATE) / "lemmatized"
 DATA_NER_PATH = ROOT_PATH / DATA_PATH / str(TODAY_DATE) / "ner"
 DATA_ZERO_SHOT_PATH = ROOT_PATH / DATA_PATH / str(TODAY_DATE) / "zero-shot"
+DATA_STATS = ROOT_PATH / DATA_PATH / str(TODAY_DATE) / "stats"
 
 DATA_PATHS = {
     "raw": DATA_RAW_PATH,
@@ -23,7 +24,8 @@ DATA_PATHS = {
     "cleaned": DATA_CLEANED_PATH,
     "lemmatized": DATA_LEMMATIZED_PATH,
     "ner": DATA_NER_PATH,
-    "zero-shot": DATA_ZERO_SHOT_PATH
+    "zero-shot": DATA_ZERO_SHOT_PATH,
+    "stats": DATA_STATS
 }
 
 SCRAPING_CONFIG = ROOT_PATH / "pipeline" / "scraping" / "scraper_config.json"
@@ -40,3 +42,6 @@ try:
     API_TOKEN = env("API_TOKEN")
 except EnvError:
     pass
+
+COLOR = "#56334B"
+COLOR_MAP = "RdPu"

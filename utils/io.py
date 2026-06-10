@@ -4,6 +4,9 @@ import re
 from collections.abc import Iterable
 from typing import Literal
 
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+
 from config import DATA_PATH, DATA_PATHS, TODAY_DATE
 
 HASHED_URLS_JSON = DATA_PATH / str(TODAY_DATE) / "hashed_urls.json"
@@ -86,7 +89,8 @@ class FileHandler:
                 "lemmatized",
                 "meta",
                 "zero-shot",
-                "ner"
+                "ner",
+                "stats"
             ]
         ) -> None:
         """
@@ -107,10 +111,10 @@ class FileHandler:
 
         if self.data_path in ("raw", "cleaned", "lemmatized"):
             self.data_type = ".txt"
-        elif self.data_path in ("meta", "zero-shot", "ner"):
+        elif self.data_path in ("meta", "zero-shot", "ner", "stats"):
             self.data_type = ".json"
 
-    def load(self, url: str) -> str | dict:
+    def load(self, filename: str, save_hashed=True) -> str | dict:
         """
         Load the saved data, using URL.
 
@@ -119,15 +123,16 @@ class FileHandler:
 
         Returns:
             str | dict: Data from the corresponding file.
-        """
-        hashed_url = hash_url(url)
-        file_path = self.directory / f"{hashed_url}{self.data_type}"
+        """### Переписать докстринг
+        if save_hashed:
+            filename = hash_url(filename)
+        file_path = self.directory / f"{filename}{self.data_type}"
         with open(file_path, "r", encoding="utf-8") as file:
             if self.data_type == ".json":
                 return json.load(file)
             return file.read()
 
-    def save(self, url: str, data: str | dict) -> str:
+    def save(self, filename: str, data: str | dict, load_hashed=True) -> str:
         """
         Save the data to file and get it hashed name.
 
@@ -138,8 +143,9 @@ class FileHandler:
         Returns:
             str: The generated 64-character SHA-256 hash string.
         """
-        hashed_url = hash_url(url)
-        file_path = self.directory / f"{hashed_url}{self.data_type}"
+        if load_hashed:
+            filename = hash_url(filename)
+        file_path = self.directory / f"{filename}{self.data_type}"
         with open(file_path, "w", encoding="utf-8") as file:
             if self.data_type == ".json":
                 if not isinstance(data, dict):
@@ -149,7 +155,7 @@ class FileHandler:
                 if not isinstance(data, str):
                     raise TypeError
                 file.write(data)
-        return hashed_url
+        return filename
 
     def yield_all(self) -> Iterable[tuple[str, str | dict]]:
         """
@@ -159,12 +165,12 @@ class FileHandler:
             Iterator[Iterable]: Tuple of (hashed url, data content).
         """
         for file_path in self.directory.glob(f"*{self.data_type}"):
-                url_hash = file_path.stem
+                filename = file_path.stem                        
                 with open(file_path, "r", encoding="utf-8") as file:
                     if self.data_type == ".json":
-                        yield url_hash, json.load(file)
+                        yield filename, json.load(file)
                     else:
-                        yield url_hash, file.read()
+                        yield filename, file.read()
 
     def check_if_saved(self, url: str) -> bool:
         """
@@ -181,28 +187,58 @@ class FileHandler:
 
 
 class TextFileHandler(FileHandler):
-    def load(self, url: str) -> str:
-        data = super().load(url)
+    def load(self, filename: str, *args, **kwargs) -> str:
+        data = super().load(filename,  *args, **kwargs)
         if not isinstance(data, str):
             raise TypeError
         return data
 
     def yield_all(self) -> Iterable[tuple[str, str]]:
-        for hashed_url, data in super().yield_all():
+        for filename, data in super().yield_all():
             if not isinstance(data, str):
                 raise NotImplementedError
-            yield hashed_url, data
+            yield filename, data
 
 
 class JsonFileHandler(FileHandler):
-    def load(self, url: str) -> dict:
-        data = super().load(url)
+    def load(self, filename: str, *args, **kwargs) -> dict:
+        data = super().load(filename, *args, **kwargs)
         if not isinstance(data, dict):
             raise TypeError
         return data
 
     def yield_all(self) -> Iterable[tuple[str, dict]]:
-        for hashed_url, data in super().yield_all():
+        for filename, data in super().yield_all():
             if not isinstance(data, dict):
                 raise NotImplementedError
-            yield hashed_url, data
+            yield filename, data
+
+
+class PngFigureHandler():
+    def __init__(self, data_path: Literal["stats"] = "stats") -> None:
+        if data_path not in DATA_PATHS:
+            raise NotImplementedError(
+                f"The data path: {data_path} is not allowed"
+            )
+        self.data_path = data_path
+        self.directory = DATA_PATHS[data_path]
+        self.data_type = ".png"
+
+    def save(self, filename: str, fig: Figure) -> str:
+        if not isinstance(fig, Figure):
+            raise TypeError("Expected matplotlib.figure.Figure object")
+        fig.savefig(
+            self.directory / f"{filename}{self.data_type}",
+            format=self.data_type.strip(".")
+        )
+        plt.close()
+        return filename
+    
+    def load(self, filename) -> bytes:
+        with open(self.directory / f"{filename}{self.data_type}", "rb") as file:
+            return file.read()
+        
+    def check_if_saved(self, filename: str) -> bool:
+        return (self.directory / f"{filename}{self.data_type}").is_file()
+
+        

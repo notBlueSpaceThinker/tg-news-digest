@@ -1,16 +1,9 @@
 from collections import Counter
 from collections.abc import Iterable
 
-import nltk
-
-from pipeline.preprocessing.preprocessing import normalize_name
-
-try:
-    nltk.data.find("tokenizers/punkt_tab")
-except LookupError:
-    nltk.download("punkt_tab", quiet=True)
-
 from nltk.tokenize import word_tokenize
+
+from pipeline.preprocessing.preprocessing import normalize_name, word_tokenize
 
 
 def count_words(texts: Iterable[str]) -> dict:
