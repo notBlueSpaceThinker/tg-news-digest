@@ -2,10 +2,8 @@ from requests.exceptions import ReadTimeout
 from tqdm import tqdm
 
 from config import SCRAPING_CONFIG
-from pipeline.inference.inference import run_ner, run_zero_shot
-from pipeline.preprocessing.preprocessing import (clean, lemmatize,
-                                                  remove_stop_words,
-                                                  word_tokenize)
+from pipeline.inference import inference
+from pipeline.preprocessing import preprocessing
 from pipeline.scraping.core_utils import ScrapingConfig
 from pipeline.scraping.crawlers import NIANNCrawler, NNCrawler, NNEWSCrawler
 from pipeline.scraping.parsers import NIANNParser, NNEWSParser, NNParser
@@ -60,11 +58,11 @@ def run_preprocessing_pipeline() -> None:
         if cleaned_handler.check_if_saved(hashed_url) and \
         lemmatized_handler.check_if_saved(hashed_url):
             continue
-        cleaned_text = clean(text)
-        removed_stop_words = remove_stop_words(word_tokenize(cleaned_text))
+        cleaned_text = preprocessing.clean(text)
+        removed_stop_words = preprocessing.remove_stop_words(preprocessing.word_tokenize(cleaned_text))
         if isinstance(removed_stop_words, str):
-            removed_stop_words = word_tokenize(removed_stop_words)
-        lemmatized_text = lemmatize(removed_stop_words, concat=True)
+            removed_stop_words = preprocessing.word_tokenize(removed_stop_words)
+        lemmatized_text = preprocessing.lemmatize(removed_stop_words, concat=True)
 
         cleaned_handler.save(hashed_url, cleaned_text)
         lemmatized_handler.save(hashed_url, str(lemmatized_text))
@@ -79,7 +77,7 @@ def run_inference_pipeline() -> None:
     for hashed_url, text in tqdm(cleaned_handler.yield_all(), desc="Inference with zero-shot: "):
         if zero_shot_handler.check_if_saved(hashed_url):
             continue
-        zero_shot = run_zero_shot(text)
+        zero_shot = inference.run_zero_shot(text)
         if not zero_shot:
             continue
         zero_shot_handler.save(hashed_url, zero_shot)
@@ -89,7 +87,7 @@ def run_inference_pipeline() -> None:
     for hashed_url, text in tqdm(raw_handler.yield_all(), desc="Inference with ner: "):
         if ner_handler.check_if_saved(hashed_url):
             continue
-        ner = run_ner(text)
+        ner = inference.run_ner(text)
         if not ner:
             continue
         ner_handler.save(hashed_url, ner)

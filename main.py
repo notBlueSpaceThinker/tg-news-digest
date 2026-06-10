@@ -6,12 +6,19 @@ from config import PIPELINE_TIME_SLEEP
 from pipeline.pipeline import run_full_pipeline
 
 
-def pipeline_loop():
+def pipeline_loop() -> None:
+    """
+    Runs the infinite loop of the pipeline with certain sleep time interval.
+    """
     while True:
         run_full_pipeline()
         time.sleep(PIPELINE_TIME_SLEEP)
 
 def main() -> None:
+    """
+    Entrypoint for bot and pipeline.
+    Starts the background pipeline thread and runs the bot polling loop.
+    """
     threading.Thread(target=pipeline_loop, daemon=True).start()
     bot.bot.polling(non_stop=True)
     
