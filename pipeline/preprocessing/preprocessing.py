@@ -116,6 +116,17 @@ def lemmatize(tokens: list[str], concat: bool = False) -> str | list[str]:
     return " ".join(lemmatized) if concat else lemmatized
 
 def normalize_name(word: str, tag: Literal["name", "surn"]) -> str:
+    """
+    Normalize name or surname to the nominative singular form.
+
+    Args:
+        word (str): Name or surname to normalize.
+        tag: Type of the word (name, surname).
+
+    Returns:
+        str: The normalized word in nominative singular form
+            with the first letter capitalized.
+    """
     for p in morph.parse(word):
         if tag.capitalize() in p.tag:
             if (inflected := p.inflect({'nomn', 'sing'})):

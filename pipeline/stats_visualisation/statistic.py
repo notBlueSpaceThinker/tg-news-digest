@@ -5,12 +5,31 @@ from pipeline.preprocessing import preprocessing
 
 
 def count_words(texts: Iterable[str]) -> dict:
+    """
+    Count word frequencies across a collection of texts.
+
+    Args:
+        texts (Iterable[str]): Collection of texts to process.
+
+    Returns:
+        dict: With words as keys and their occurrence counts as values.
+    """
     word_frequencies = Counter()
     for text in texts:
         word_frequencies.update(preprocessing.tokenize_by_words(text))
     return word_frequencies
 
 def count_topics(zero_shot_predictions: Iterable[dict]) -> dict:
+    """
+    Count the frequency of predicted topics.
+
+    Args:
+        zero_shot_predictions (Iterable[dict]): Collection of zero-shot
+            classification results.
+
+    Returns:
+        dict: With topics as keys and their occurrence counts as values.
+    """
     topic_frequencies = Counter()
     for prediction in zero_shot_predictions:
         topic, _ = max(
@@ -21,6 +40,15 @@ def count_topics(zero_shot_predictions: Iterable[dict]) -> dict:
     return topic_frequencies
 
 def count_persons(ner_predictions: Iterable[dict]) -> dict:
+    """
+    Count the frequency of predicted persons.
+
+    Args:
+        ner_predictions (Iterable[dict]): Collection of NER prediction results.
+
+    Returns:
+        dict: With presons as keys and their occurrence counts as values.
+    """
     person_frequencies = Counter()
     for prediction in ner_predictions:
         entities = sorted(prediction["predict"], key=lambda x: x["start"])

@@ -3,7 +3,6 @@ from pathlib import Path
 
 from environs import Env
 from environs.exceptions import EnvError
-from matplotlib.colors import LinearSegmentedColormap
 
 TODAY_DATE = date.today() - timedelta(days=0)
 

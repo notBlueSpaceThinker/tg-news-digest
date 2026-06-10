@@ -1,5 +1,3 @@
-from collections.abc import Iterable
-
 import matplotlib
 import matplotlib.pyplot as plt
 import squarify
@@ -32,6 +30,17 @@ TOPIC_TRANSLATION = {
 
 
 def visualize_treemap(frequencies: dict[str, int], plot: bool = False) -> Figure:
+    """
+    Create a treemap from frequencies dict.
+
+    Args:
+        frequencies (dict[str, int]): Keys as labels and frequencies as values.
+        plot (bool, optional): Display the diagram or not.
+            Defaults to False.
+
+    Returns:
+        Figure: A matplotlib figure object.
+    """
     topics_ru = [
         f"{TOPIC_TRANSLATION.get(topic, topic)}\n({count})"
         for topic, count in frequencies.items()
@@ -56,10 +65,20 @@ def visualize_treemap(frequencies: dict[str, int], plot: bool = False) -> Figure
     ax.axis("off")
     if plot:
         plt.show()
-
     return fig
 
-def visualize_wordcloud(frequencies: dict[str, int]) -> Figure:
+def visualize_wordcloud(frequencies: dict[str, int], plot: bool = False) -> Figure:
+    """
+    Create a wordcloud from frequencies dict.
+
+    Args:
+        frequencies (dict[str, int]): Keys as labels and frequencies as values.
+        plot (bool, optional): Display the diagram or not.
+            Defaults to False.
+
+    Returns:
+        Figure: A matplotlib figure object.
+    """
     wordcloud = WordCloud(
         width=1200,
         height=600,
@@ -70,5 +89,6 @@ def visualize_wordcloud(frequencies: dict[str, int]) -> Figure:
     fig, ax = plt.subplots(figsize=(12, 6))
     ax.imshow(wordcloud)
     ax.axis("off")
-
+    if plot:
+        plt.show()
     return fig

@@ -81,6 +81,9 @@ def save_url_to_hash(url: str) -> str:
 
 
 class FileHandler:
+    """
+    Handles saving, loading, and checking json and txt  files.
+    """
     def __init__(
             self,
             data_path: Literal[
@@ -100,7 +103,7 @@ class FileHandler:
             data_path (Literal): Data name (for instance: "raw", "meta", etc.)
 
         Raises:
-            NotImplementedError: If given unsupported data name.
+            NotImplementedError:  If the provided data path is not supported.
         """
         if data_path not in DATA_PATHS:
             raise NotImplementedError(
@@ -116,14 +119,16 @@ class FileHandler:
 
     def load(self, filename: str, load_hashed=True) -> str | dict:
         """
-        Load the saved data, using URL.
+        Load data from a saved file.
 
         Args:
-            url (str): The URL of the article.
+            filename (str): The name of the file or the URL which represents the filename.
+            load_hashed (bool, optional): Whether to hash the filename (if it's a URL).
+              Defaults to True.
 
         Returns:
             str | dict: Data from the corresponding file.
-        """### Переписать докстринг
+        """
         if load_hashed:
             filename = hash_url(filename)
         file_path = self.directory / f"{filename}{self.data_type}"
@@ -137,11 +142,14 @@ class FileHandler:
         Save the data to file and get it hashed name.
 
         Args:
-            url (str): The URL of the article.
+            filename (str): The name of the file to be saved.
             data (str | dict): Data for saving.
+            save_hashed (bool, optional): Whether to hash the filename (if it's a URL).
+                Defaults to True.
 
         Returns:
-            str: The generated 64-character SHA-256 hash string.
+            str: The generated 64-character SHA-256 hash string or simple filename,
+                if save_hashed is False.
         """
         if save_hashed:
             filename = hash_url(filename)
@@ -162,7 +170,7 @@ class FileHandler:
         Iterates over the files from the given directory.
 
         Yields:
-            Iterator[Iterable]: Tuple of (hashed url, data content).
+            Iterator[Iterable]: Tuple of (filename, data content).
         """
         for file_path in self.directory.glob(f"*{self.data_type}"):
                 filename = file_path.stem                        
@@ -174,10 +182,10 @@ class FileHandler:
 
     def check_if_saved(self, url: str) -> bool:
         """
-        Checks if the URL is saved.
+        Checks if the file is saved.
 
         Args:
-            url (str): The URL of the article.
+            filename (str): The name of the file to be checked.
 
         Returns:
             bool: True if the file already exists, False otherwise.
@@ -187,6 +195,9 @@ class FileHandler:
 
 
 class TextFileHandler(FileHandler):
+    """
+    Child class of FileHandler for handling txt files.
+    """
     def load(self, filename: str, *args, **kwargs) -> str:
         data = super().load(filename,  *args, **kwargs)
         if not isinstance(data, str):
@@ -201,6 +212,9 @@ class TextFileHandler(FileHandler):
 
 
 class JsonFileHandler(FileHandler):
+    """
+    Child class of FileHandler for handling json files.
+    """
     def load(self, filename: str, *args, **kwargs) -> dict:
         data = super().load(filename, *args, **kwargs)
         if not isinstance(data, dict):
@@ -215,7 +229,20 @@ class JsonFileHandler(FileHandler):
 
 
 class PngFigureHandler():
+    """
+    Handles saving, loading, and checking png figure files.
+    """
     def __init__(self, data_path: Literal["stats"] = "stats") -> None:
+        """
+        Initialize a png figure handler.
+
+        Args:
+            data_path: key of the target directory defined in DATA_PATHS.
+                Defaults to "stats".
+
+        Raises:
+            NotImplementedError:  If the provided data path is not supported.
+        """
         if data_path not in DATA_PATHS:
             raise NotImplementedError(
                 f"The data path: {data_path} is not allowed"
@@ -225,6 +252,20 @@ class PngFigureHandler():
         self.data_type = ".png"
 
     def save(self, filename: str, fig: Figure) -> str:
+        """
+        Save a matplotlib figure as a png file.
+
+        Args:
+            filename (str): Name of the file.
+            fig (Figure): Matplotlib figure to save.
+
+        Raises:
+            TypeError: If fig is not an instance of
+                matplotlib.figure.Figure.
+
+        Returns:
+            str: The name of the file
+        """
         if not isinstance(fig, Figure):
             raise TypeError("Expected matplotlib.figure.Figure object")
         fig.savefig(
@@ -234,11 +275,27 @@ class PngFigureHandler():
         plt.close(fig)
         return filename
     
-    def load(self, filename) -> bytes:
+    def load(self, filename: str) -> bytes:
+        """
+        Load png file and return its contents.
+
+        Args:
+            filename (str): Name of the file
+
+        Returns:
+            bytes: The file contents as bytes.
+        """
         with open(self.directory / f"{filename}{self.data_type}", "rb") as file:
             return file.read()
         
     def check_if_saved(self, filename: str) -> bool:
-        return (self.directory / f"{filename}{self.data_type}").is_file()
+        """
+        Checks if the file is saved.
 
-        
+        Args:
+            filename (str):  The name of the file to be checked.
+
+        Returns:
+            bool: True if the file already exists, False otherwise.
+        """
+        return (self.directory / f"{filename}{self.data_type}").is_file()

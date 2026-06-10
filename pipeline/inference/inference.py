@@ -4,18 +4,30 @@ from typing import Any, Literal
 
 import torch
 from torch.nn import Module
-from transformers import pipeline
+from transformers import Pipeline, pipeline
 
 from config import MODELS_CONFIG
 
 
 @dataclass
 class ModelConfig:
+    """
+    Configuration for a tranformer pipeline.
+    """
     model_name: Literal["ner", "zero-shot"]
     parameters: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def load_config(cls, model_name: Literal["ner", "zero-shot"]) -> "ModelConfig":
+        """
+        Load model config from the json config file.
+
+        Args:
+            model_name: Name of the model config.
+
+        Returns:
+            ModelConfig: Instance initialized with the loaded parameters.
+        """
         with open(MODELS_CONFIG, "r", encoding="utf-8") as file:
             raw_config = json.load(file)
 
@@ -26,12 +38,31 @@ class ModelConfig:
 
 
 class Model(Module):
+    """
+    Class for loading and defining a HuggingFace pipeline.
+    Uses models_config.json for configuration.
+    """
     def __init__(self, config: ModelConfig, *args: Any, **kwargs: Any) -> None:
+        """
+        Initialize the model as HuggingFace pipeline.
+
+        Args:
+            config (ModelConfig): Model configuration.
+        """
         super().__init__(*args, **kwargs)
         self.config = config
         self.pipeline = self._build_pipeline()
 
-    def _build_pipeline(self):
+    def _build_pipeline(self) -> Pipeline:
+        """
+        Create a HuggingFace pipeline with a certain model config.
+
+        Raises:
+            NotImplementedError: If the model type is not supported.
+
+        Returns:
+            Pipeline: Instance of HuggingFace pipeline.
+        """
         device = self.config.parameters.get("device")
         if device is None:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -56,6 +87,15 @@ class Model(Module):
         raise NotImplementedError
 
     def forward(self, text: str, **kwargs):
+        """
+        Run models inference.
+
+        Args:
+            text (str): Input text.
+
+        Returns:
+            Prediction result.
+        """
         if self.config.model_name == "zero-shot":
             labels = self.config.parameters.get("categories")
             if "candidate_labels" not in kwargs:
@@ -69,17 +109,37 @@ ner_model = Model(ModelConfig.load_config("ner"))
 
 
 def run_zero_shot(text: str) -> dict | None:
+    """
+    Run zero shot classification
+
+    Args:
+        text (str): Input text.
+
+    Returns:
+        dict | None: Model prediction dictionary.
+            None if the input is empty.
+    """
     try:
         predict = zero_shot_model(text)
-    except ValueError: #In case if no text included
+    except ValueError:
         return None
     del predict["sequence"]
     return predict
 
 def run_ner(text: str) -> dict | None:
+    """
+    Run named entity recognition
+
+    Args:
+        text (str): Input text.
+
+    Returns:
+        dict | None: Model prediction dictionary.
+            None if the input is empty.
+    """
     try:
         predict = ner_model(text)
-    except ValueError: #In case if no text included
+    except ValueError:
         return None
     for entity in predict:
         entity["score"] = float(entity["score"])
