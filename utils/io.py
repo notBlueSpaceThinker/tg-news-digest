@@ -114,7 +114,7 @@ class FileHandler:
         elif self.data_path in ("meta", "zero-shot", "ner", "stats"):
             self.data_type = ".json"
 
-    def load(self, filename: str, save_hashed=True) -> str | dict:
+    def load(self, filename: str, load_hashed=True) -> str | dict:
         """
         Load the saved data, using URL.
 
@@ -124,7 +124,7 @@ class FileHandler:
         Returns:
             str | dict: Data from the corresponding file.
         """### Переписать докстринг
-        if save_hashed:
+        if load_hashed:
             filename = hash_url(filename)
         file_path = self.directory / f"{filename}{self.data_type}"
         with open(file_path, "r", encoding="utf-8") as file:
@@ -132,7 +132,7 @@ class FileHandler:
                 return json.load(file)
             return file.read()
 
-    def save(self, filename: str, data: str | dict, load_hashed=True) -> str:
+    def save(self, filename: str, data: str | dict, save_hashed=True) -> str:
         """
         Save the data to file and get it hashed name.
 
@@ -143,7 +143,7 @@ class FileHandler:
         Returns:
             str: The generated 64-character SHA-256 hash string.
         """
-        if load_hashed:
+        if save_hashed:
             filename = hash_url(filename)
         file_path = self.directory / f"{filename}{self.data_type}"
         with open(file_path, "w", encoding="utf-8") as file:
@@ -231,7 +231,7 @@ class PngFigureHandler():
             self.directory / f"{filename}{self.data_type}",
             format=self.data_type.strip(".")
         )
-        plt.close()
+        plt.close(fig)
         return filename
     
     def load(self, filename) -> bytes:

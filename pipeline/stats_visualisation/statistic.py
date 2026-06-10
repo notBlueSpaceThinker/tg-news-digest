@@ -1,15 +1,13 @@
 from collections import Counter
 from collections.abc import Iterable
 
-from nltk.tokenize import word_tokenize
-
-from pipeline.preprocessing.preprocessing import normalize_name, word_tokenize
+from pipeline.preprocessing import preprocessing
 
 
 def count_words(texts: Iterable[str]) -> dict:
     word_frequencies = Counter()
     for text in texts:
-        word_frequencies.update(word_tokenize(text))
+        word_frequencies.update(preprocessing.tokenize_by_words(text))
     return word_frequencies
 
 def count_topics(zero_shot_predictions: Iterable[dict]) -> dict:
@@ -36,8 +34,8 @@ def count_persons(ner_predictions: Iterable[dict]) -> dict:
                 break
             next_entity = entities[i + 1]
             if next_entity["entity_group"] == "LAST_NAME" and next_entity["start"] <= current["end"] + 1:
-                first_name_normalized = normalize_name(current['word'], 'name')
-                last_name_normalized = normalize_name(next_entity['word'], 'surn')
+                first_name_normalized = preprocessing.normalize_name(current['word'], 'name')
+                last_name_normalized = preprocessing.normalize_name(next_entity['word'], 'surn')
                 person_frequencies[f"{first_name_normalized} {last_name_normalized}"] += 1
                 i += 2
                 continue

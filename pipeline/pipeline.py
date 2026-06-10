@@ -1,3 +1,4 @@
+from requests.exceptions import ReadTimeout
 from tqdm import tqdm
 
 from config import SCRAPING_CONFIG
@@ -29,14 +30,20 @@ def run_scraping_pipeline() -> None:
         "NNEWS": NNEWSParser
     }
     for portal_name, crawler in crawlers.items():
-        urls = crawler.find_urls()
+        try:
+            urls = crawler.find_urls()
+        except ReadTimeout:
+            continue
         raw_handler = io.TextFileHandler("raw")
         meta_handler = io.JsonFileHandler("meta")
         for url in tqdm(urls, desc=f"Parsing {portal_name}: "):
             if raw_handler.check_if_saved(url) and \
             meta_handler.check_if_saved(url):
                 continue
-            parser = parsers[portal_name](url, config)
+            try:
+                parser = parsers[portal_name](url, config)
+            except ReadTimeout:
+                continue
 
             raw_handler.save(url, parser.parse_raw_text())
             meta_handler.save(url, parser.parse_meta_data())
@@ -92,26 +99,26 @@ def run_analytics_pipeline() -> None:
     """
     Generate corpus statistics and save visualization summary.
     """
-    figure_handler = io.PngFigureHandler()
+    png_handler = io.PngFigureHandler()
     stats_handler = io.JsonFileHandler("stats")
 
     _, texts = zip(*io.TextFileHandler("lemmatized").yield_all())
     word_frequencies = statistic.count_words(texts)
     fig = visualizer.visualize_wordcloud(word_frequencies)
-    figure_handler.save("word_frequencies", fig)
-    stats_handler.save("word_frequencies", word_frequencies, load_hashed=False)
+    png_handler.save("word_frequencies", fig)
+    stats_handler.save("word_frequencies", word_frequencies, save_hashed=False)
 
     _, zero_shot = zip(*io.JsonFileHandler("zero-shot").yield_all())
     topic_frequencies = statistic.count_topics(zero_shot)
     fig = visualizer.visualize_treemap(topic_frequencies)
-    figure_handler.save("topic_frequencies", fig)
-    stats_handler.save("topic_frequencies", topic_frequencies, load_hashed=False)
+    png_handler.save("topic_frequencies", fig)
+    stats_handler.save("topic_frequencies", topic_frequencies, save_hashed=False)
 
     _, ner = zip(*io.JsonFileHandler("ner").yield_all())
     person_frequencies = statistic.count_persons(ner)
     fig = visualizer.visualize_wordcloud(person_frequencies)
-    figure_handler.save("person_frequencies", fig)
-    stats_handler.save("person_frequencies", person_frequencies, load_hashed=False)
+    png_handler.save("person_frequencies", fig)
+    stats_handler.save("person_frequencies", person_frequencies, save_hashed=False)
 
 
 def run_full_pipeline() -> None:

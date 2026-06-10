@@ -45,3 +45,5 @@ except EnvError:
 
 COLOR = "#56334B"
 COLOR_MAP = "RdPu"
+
+PIPELINE_TIME_SLEEP = 60 * 15

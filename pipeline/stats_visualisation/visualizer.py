@@ -1,11 +1,14 @@
 from collections.abc import Iterable
 
+import matplotlib
 import matplotlib.pyplot as plt
 import squarify
 from matplotlib.figure import Figure
 from wordcloud import WordCloud
 
 from config import COLOR, COLOR_MAP
+
+matplotlib.use('Agg')
 
 TOPIC_TRANSLATION = {
     "entertainment": "Развлечения",
