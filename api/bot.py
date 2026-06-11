@@ -48,8 +48,18 @@ def get_markup() -> types.ReplyKeyboardMarkup:
 def start(message):
     bot.send_message(
         message.chat.id,
-        f"Привет, {message.from_user.first_name}! Чем я могу сегодня помочь?",
-        reply_markup=get_markup()
+        f"*Дарова, {message.from_user.first_name}!*\n"
+        "*Я умею тоси-боси, муси-пуси..*\n"
+        "*Новости короче выдаю :/*\n\n"
+        "Вот список моих команд\n"
+        "• *Дайджест* - типо сводка всего и вся.\n"
+        "• *Популярные темы* - то, о чем сегодня трындычут везде\n"
+        "• *Свежие новости* - ещё не разлетевшиеся, горяченькие посты\n"
+        "• *Личность дня* - ну, они сегодня на слуху много где\n"
+        "• *Слово дня* - пополняем лексикон\n\n"
+        "спрашивай /help, если ещё понадоблюсь",
+        reply_markup=get_markup(),
+        parse_mode="Markdown"
     )
 
 
@@ -63,23 +73,26 @@ def digest(message):
             chat_id=message.chat.id,
             photo=("digest.png", png_handler.load("digest")),
             caption=(
-                "дайджест\n\n"
-                f"Самая популярная тема - '{TOPIC_TRANSLATION[topic]}'\n"
-                f"Всего упоминалась в {topic_frequency} cтатье(ях)\n\n"
-                f"Из личностей больше всех встречался - {person}\n"
-                f"Упомянули {person_frequency} раз\n\n"
-                f"Чаше всего встречалось слово - '{word}'\n"
-                f"Встретилось целых {word_frequency} раз\n\n"
-                f"Последние новости:\n"
+                "*Так так так.. что там у нас вообще в мире-то творится*\n"
+                "*Это дайджест, деткааа*\n\n"
+                f"Та самая фигня о которой все говорят - '*{TOPIC_TRANSLATION[topic]}*'\n"
+                f"Всего {topic_frequency} статей об этом\n\n"
+                f"В общем.. Сегодня я вижу везде и всюду - *{person}*...    "
+                f"Целых {person_frequency} раз мне попался(ась)\n\n"
+                f"Сегодня больше всего мне попалось слово - *'{word}*'\n"
+                f"Встретилось целых {word_frequency} раз (ёмоё)\n\n"
+                f"Последние новости для тебя, дорогуша:\n"
                 f"{statistic.get_fresh_news_text(top_n=3)}"
             ),
-            reply_markup=get_markup()
+            reply_markup=get_markup(),
+            parse_mode="Markdown"
         )
     except FileNotFoundError:
         bot.send_message(
             message.chat.id,
-            "К сожалению, пока недостаточно данных. Попробуйте снова поже",
-            reply_markup=get_markup()
+            "Подожди... У меня сейчас завал. Дай мне немного времени откиснуть.",
+            reply_markup=get_markup(),
+            parse_mode="Markdown"
         )
 
 @bot.message_handler(func=lambda message: message.text.lower().strip() == "популярные темы")
@@ -89,28 +102,31 @@ def popular_topics(message):
             chat_id=message.chat.id,
             photo=("topic_frequencies.png", png_handler.load("topic_frequencies")),
             caption=(
-                "Топ популярных тем новостей:\n\n" +
+                "*Вот и об этом у нас сегодня в народе глаголят:*\n\n" +
                 "\n".join(
                     f"{i}. {TOPIC_TRANSLATION[topic]} — {count}"
                     for i, (topic, count) in enumerate(statistic.get_topic_frequencies(), start=1)
                 )
             ),
-            reply_markup=get_markup()
+            reply_markup=get_markup(),
+            parse_mode="Markdown"
         )
     except FileNotFoundError:
         bot.send_message(
             message.chat.id,
-            "К сожалению, пока недостаточно данных. Попробуйте снова поже",
-            reply_markup=get_markup()
+            "К сожалению, пока недостаточно данных. Давай ты немного покимаришь там..",
+            reply_markup=get_markup(),
+            parse_mode="Markdown"
         )
 
 @bot.message_handler(func=lambda message: message.text.lower().strip() == "свежие новости")
 def fresh_news(message):
     bot.send_message(
         message.chat.id,
-        "Свежие новости на сегодня:\n\n"
+        "*Самый свежак для тебя достал:*\n\n"
         f"{statistic.get_fresh_news_text()}",
-        reply_markup=get_markup()
+        reply_markup=get_markup(),
+        parse_mode="Markdown"
     )
 
 @bot.message_handler(func=lambda message: message.text.lower().strip() == "личность дня")
@@ -120,19 +136,21 @@ def top_person(message):
             chat_id=message.chat.id,
             photo=("person_frequencies.png", png_handler.load("person_frequencies")),
             caption=(
-                "Топ популярных личностей:\n\n" +
+                "*О них говорит весь Нижний:*\n\n" +
                 "\n".join(
                     f"{i}. {person} — {count}"
                     for i, (person, count) in enumerate(statistic.get_person_frequencies(), start=1)
                 )
             ),
-            reply_markup=get_markup()
+            reply_markup=get_markup(),
+            parse_mode="Markdown"
         )
     except FileNotFoundError:
         bot.send_message(
             message.chat.id,
-            "К сожалению, пока недостаточно данных. Попробуйте снова поже",
-            reply_markup=get_markup()
+            "Да не тыкай ты, итак заказов много. Встань в очередь и жди",
+            reply_markup=get_markup(),
+            parse_mode="Markdown"
         )
 
 @bot.message_handler(func=lambda message: message.text.lower().strip() == "слово дня")
@@ -142,25 +160,29 @@ def top_word(message):
             chat_id=message.chat.id,
             photo=("word_frequencies.png", png_handler.load("word_frequencies")),
             caption=(
-                "Топ популярных слов:\n\n" +
+                "*Вот такие слова я сегодня надыбал:*\n\n" +
                 "\n".join(
                     f"{i}. {word} — {count}"
                     for i, (word, count) in enumerate(statistic.get_word_frequencies(), start=1)
                 )
             ),
-            reply_markup=get_markup()
+            reply_markup=get_markup(),
+            parse_mode="Markdown"
         )
     except FileNotFoundError:
         bot.send_message(
             message.chat.id,
-            "К сожалению, пока недостаточно данных. Попробуйте снова поже",
-            reply_markup=get_markup()
+            "Мальчик, перезвони позже",
+            reply_markup=get_markup(),
+            parse_mode="Markdown"
         )
 
 @bot.message_handler(func=lambda message: True)
 def unknown_command(message):
     bot.send_message(
         message.chat.id,
-        "Я вас не понял. Пожалуйста, воспользуйтесь кнопками меню.",
-        reply_markup=get_markup()
+        "Ты че сейчас выпалил? Я не разобрал единого слова\n"
+        "*Воспользуйся кнопками меню*",
+        reply_markup=get_markup(),
+        parse_mode="Markdown"
     )

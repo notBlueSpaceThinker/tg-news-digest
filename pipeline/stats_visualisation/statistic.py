@@ -117,6 +117,6 @@ def get_fresh_news_text(top_n: int | None = 7) -> str:
         meta = fresh_news[key]
         news_list.append(f"{key}. {meta["portal"]}: {meta["title"]}")
         time = datetime.fromisoformat(meta["date"]).time()
-        news_list.append(f"Время публикации: {time}\n")
+        news_list.append(f"_Время публикации: {time}\n_")
         urls.append(meta["url"])
     return  "\n".join(news_list)
