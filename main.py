@@ -19,8 +19,9 @@ def main() -> None:
     Entrypoint for bot and pipeline.
     Starts the background pipeline thread and runs the bot polling loop.
     """
+    pipeline_loop()
     threading.Thread(target=pipeline_loop, daemon=True).start()
-    bot.bot.polling(non_stop=True)
+    # bot.bot.polling(non_stop=True)
     
     
 if __name__ == "__main__":

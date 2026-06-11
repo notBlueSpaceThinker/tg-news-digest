@@ -1,6 +1,10 @@
 from bs4 import BeautifulSoup
 
-from pipeline.scraping.core_utils import ScrapingConfig, make_request
+from pipeline.scraping.core_utils import (
+    ScrapingConfig,
+    make_request,
+    parse_date_to_datetime
+)
 
 
 class BaseParser():
@@ -68,7 +72,27 @@ class NNParser(BaseParser):
         return " ".join(text)
 
     def parse_meta_data(self) -> dict:
-        return {} #Not implemented yet
+        content_header = self.soup.find("header", attrs={"name": "articleHeader"})
+        if not content_header:
+            return {
+                "portal": "NN.ru",
+                "url": self.full_url,
+                "title": None,
+                "date": None,
+            }
+
+        title_tag = content_header.find("h1", id="article-title")
+        title = title_tag.get_text(strip=True) if title_tag else None
+        
+        time_tag = content_header.find("time")
+        date = time_tag.get("datetime") if time_tag else None
+
+        return {
+            "portal": "NN.ru",
+            "url": self.full_url,
+            "title": title,
+            "date": parse_date_to_datetime(date),
+        }
 
 
 class NIANNParser(BaseParser):
@@ -89,7 +113,25 @@ class NIANNParser(BaseParser):
         return " ".join(text)
 
     def parse_meta_data(self) -> dict:
-        return {} #Not implemented yet
+        content_header = self.soup.find("div", class_=["mainheader"])
+        if not content_header:
+            return {
+                "portal": "NIANN.ru",
+                "url": self.full_url,
+                "title": None,
+                "date": None,
+            }
+        title_tag = content_header.find("h1", class_=["header"])
+        title = title_tag.get_text(strip=True) if title_tag else None
+        time_tag = content_header.find("span", class_=["date_standart"])
+        date = time_tag.get_text(strip=True) if time_tag else None
+
+        return {
+            "portal": "NIANN.ru",
+            "url": self.full_url,
+            "title": title,
+            "date": parse_date_to_datetime(date),
+        }
 
 class NNEWSParser(BaseParser):
     """
@@ -107,4 +149,22 @@ class NNEWSParser(BaseParser):
         return " ".join(text)
 
     def parse_meta_data(self) -> dict:
-        return {} #Not implemented yet
+        content_header = self.soup.find("div", class_=["title-post"])
+        if not content_header:
+            return {
+                "portal": "NNEWS.nnov.ru",
+                "url": self.full_url,
+                "title": None,
+                "date": None,
+            }
+        title_tag = content_header.find("ul", class_=["post-tags"])
+        title = title_tag.get_text(strip=True) if title_tag else None
+        time_tag = content_header.find("h1")
+        date = time_tag.get_text(strip=True) if time_tag else None
+
+        return {
+            "portal": "NNEWS.nnov.ru",
+            "url": self.full_url,
+            "title": title,
+            "date": parse_date_to_datetime(date),
+        }

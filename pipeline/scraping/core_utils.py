@@ -91,3 +91,35 @@ def parse_and_format_pub_date(pub_date: str) -> date:
         pass
 
     raise ValueError
+
+def parse_date_to_datetime(date_str) -> str | None:
+    if not date_str:
+        return None
+    if "T" in date_str:
+        return date_str
+    months = {
+        "января": "01", "февраля": "02", "марта": "03",
+        "апреля": "04", "мая": "05", "июня": "06",
+        "июля": "07", "августа": "08", "сентября": "09",
+        "октября": "10", "ноября": "11", "декабря": "12"
+    }
+    for month, num_month in months.items():
+        if month in date_str:
+            try:
+                return datetime.strptime(
+                    date_str.replace(month, num_month),
+                    "%d %m %Y %H:%M"
+                ).isoformat()
+            except ValueError:
+                return None
+        
+    if "." in date_str:
+        try:
+            return datetime.strptime(
+                date_str,
+                "%d.%m.%Y %H:%M"
+            ).isoformat()
+        except ValueError:
+            return None
+        
+    return None

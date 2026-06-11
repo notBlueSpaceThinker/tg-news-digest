@@ -45,6 +45,7 @@ def run_scraping_pipeline() -> None:
 
             raw_handler.save(url, parser.parse_raw_text())
             meta_handler.save(url, parser.parse_meta_data())
+            io.save_url_to_hash(url)
 
 
 def run_preprocessing_pipeline() -> None:

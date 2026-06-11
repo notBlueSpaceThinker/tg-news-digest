@@ -75,7 +75,7 @@ def save_url_to_hash(url: str) -> str:
     hashed_url = hash_url(url)
     storage[hashed_url] = url
     with open(HASHED_URLS_JSON, "w", encoding="utf-8") as file:
-        json.dump(storage, file)
+        json.dump(storage, file, indent=4, ensure_ascii=False)
 
     return hashed_url
 
