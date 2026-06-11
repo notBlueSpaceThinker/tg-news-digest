@@ -4,7 +4,7 @@ import squarify
 from matplotlib.figure import Figure
 from wordcloud import WordCloud
 
-from config import COLOR, COLOR_MAP
+from config import COLOR_MAP
 
 matplotlib.use('Agg')
 

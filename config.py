@@ -7,6 +7,7 @@ from environs.exceptions import EnvError
 TODAY_DATE = date.today() - timedelta(days=0)
 
 ROOT_PATH = Path(__file__).parent
+ASSETS_PATH = ROOT_PATH / "assets"
 DATA_PATH = ROOT_PATH / "data"
 
 DATA_RAW_PATH = ROOT_PATH / DATA_PATH / str(TODAY_DATE) / "raw"

@@ -1,4 +1,5 @@
 from datetime import datetime
+from io import BytesIO
 
 import telebot
 from telebot import types
@@ -33,9 +34,22 @@ def start(message):
         reply_markup=get_markup()
     )
 
+
 @bot.message_handler(func=lambda message: message.text.lower().strip() == "дайджест")
 def digest(message):
-    bot.send_message(message.chat.id, "Дайджест")
+    try:
+        media_group = [
+            types.InputMediaPhoto(media=BytesIO(png_handler.load("topic_frequencies")), caption="Сводка за день"),
+            types.InputMediaPhoto(media=BytesIO(png_handler.load("person_frequencies"))),
+            types.InputMediaPhoto(media=BytesIO(png_handler.load("word_frequencies")))
+        ]
+        bot.send_media_group(message.chat.id, media_group)
+    except FileNotFoundError:
+        bot.send_message(
+            message.chat.id,
+            "К сожалению, пока недостаточно данных. Попробуйте снова поже",
+            reply_markup=get_markup()
+        )
 
 @bot.message_handler(func=lambda message: message.text.lower().strip() == "популярные темы")
 def popular_topics(message):

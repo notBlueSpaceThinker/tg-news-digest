@@ -1,14 +1,14 @@
 from requests.exceptions import ReadTimeout
 from tqdm import tqdm
 
-from config import SCRAPING_CONFIG
+from config import DATA_STATS, SCRAPING_CONFIG, TODAY_DATE
 from pipeline.inference import inference
 from pipeline.preprocessing import preprocessing
 from pipeline.scraping.core_utils import ScrapingConfig
 from pipeline.scraping.crawlers import NIANNCrawler, NNCrawler, NNEWSCrawler
 from pipeline.scraping.parsers import NIANNParser, NNEWSParser, NNParser
 from pipeline.stats_visualisation import statistic, visualizer
-from utils import io
+from utils import image, io
 
 io.ensure_data_paths()
 
@@ -125,11 +125,11 @@ def run_analytics_pipeline() -> None:
     valid_meta.sort(key=lambda meta: meta["date"], reverse=True)
     stats_json_handler.save(
         "fresh_news",
-        {idx: meta for idx, meta in enumerate(valid_meta[:5], start=1)},
+        {idx: meta for idx, meta in enumerate(valid_meta[:7], start=1)},
         save_hashed=False
     )
-
-
+    
+    image.render_text(f"Дайджест\n{TODAY_DATE.today()}", DATA_STATS / "digest.png")
 
 def run_full_pipeline() -> None:
     """
