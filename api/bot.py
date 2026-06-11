@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import telebot
 from telebot import types
 
@@ -15,13 +17,11 @@ def get_markup() -> types.ReplyKeyboardMarkup:
     markup = types.ReplyKeyboardMarkup()
     button_digest = types.KeyboardButton("Дайджест")
     button_topics = types.KeyboardButton("Популярные темы")
-    button_news_popular = types.KeyboardButton("Популярные новости")
     button_news_fresh = types.KeyboardButton("Свежие новости")
     button_top_person = types.KeyboardButton("Личность дня")
     button_top_word = types.KeyboardButton("Слово дня")
     markup.row(button_digest)
-    markup.row(button_topics)
-    markup.row(button_news_fresh, button_news_popular)
+    markup.row(button_topics, button_news_fresh)
     markup.row(button_top_person, button_top_word)
     return markup
 
@@ -57,21 +57,34 @@ def popular_topics(message):
                     f"{i}. {topic} — {count}"
                     for i, (topic, count) in enumerate(topic_frequencies.items(), start=1)
                 )
-            )
+            ),
+            reply_markup=get_markup()
         )
     except FileNotFoundError:
         bot.send_message(
             message.chat.id,
-            "К сожалению, пока недостаточно данных. Попробуйте снова поже"
+            "К сожалению, пока недостаточно данных. Попробуйте снова поже",
+            reply_markup=get_markup()
         )
 
 @bot.message_handler(func=lambda message: message.text.lower().strip() == "свежие новости")
 def fresh_news(message):
-    bot.send_message(message.chat.id, "Свежие новости")
-
-@bot.message_handler(func=lambda message: message.text.lower().strip() == "популярные новости")
-def top_news(message):
-    bot.send_message(message.chat.id, "Популярные новости")
+    fresh_news = stats_handler.load("fresh_news", load_hashed=False)
+    send_message_list = []
+    urls = []
+    for key in sorted(fresh_news.keys(), key=lambda k: int(k)):
+        meta = fresh_news[key]
+        send_message_list.append(f"{key}. {meta["portal"]}: {meta["title"]}")
+        curr_time = datetime.fromisoformat(meta["date"]).time()
+        send_message_list.append(f"Время публикации: {curr_time}\n")
+        urls.append(meta["url"])
+    send_message_txt = "\n".join(send_message_list)
+    bot.send_message(
+        message.chat.id,
+        "Свежие новости на сегондя:\n\n"
+        f"{send_message_txt}",
+        reply_markup=get_markup()
+    )
 
 @bot.message_handler(func=lambda message: message.text.lower().strip() == "личность дня")
 def top_person(message):
@@ -93,12 +106,14 @@ def top_person(message):
                     f"{i}. {person} — {count}"
                     for i, (person, count) in enumerate(person_frequencies.items(), start=1)
                 )
-            )
+            ),
+            reply_markup=get_markup()
         )
     except FileNotFoundError:
         bot.send_message(
             message.chat.id,
-            "К сожалению, пока недостаточно данных. Попробуйте снова поже"
+            "К сожалению, пока недостаточно данных. Попробуйте снова поже",
+            reply_markup=get_markup()
         )
 
 @bot.message_handler(func=lambda message: message.text.lower().strip() == "слово дня")
@@ -121,14 +136,15 @@ def top_word(message):
                     f"{i}. {word} — {count}"
                     for i, (word, count) in enumerate(word_frequencies.items(), start=1)
                 )
-            )
+            ),
+            reply_markup=get_markup()
         )
     except FileNotFoundError:
         bot.send_message(
             message.chat.id,
-            "К сожалению, пока недостаточно данных. Попробуйте снова поже"
+            "К сожалению, пока недостаточно данных. Попробуйте снова поже",
+            reply_markup=get_markup()
         )
-
 
 @bot.message_handler(func=lambda message: True)
 def unknown_command(message):

@@ -98,26 +98,37 @@ def run_analytics_pipeline() -> None:
     """
     Generate corpus statistics and save visualization summary.
     """
-    png_handler = io.PngFigureHandler()
-    stats_handler = io.JsonFileHandler("stats")
+    stats_png_handler = io.PngFigureHandler()
+    stats_json_handler = io.JsonFileHandler("stats")
+    meta_handler = io.JsonFileHandler("meta")
 
     _, texts = zip(*io.TextFileHandler("lemmatized").yield_all())
     word_frequencies = statistic.count_words(texts)
     fig = visualizer.visualize_wordcloud(word_frequencies)
-    png_handler.save("word_frequencies", fig)
-    stats_handler.save("word_frequencies", word_frequencies, save_hashed=False)
+    stats_png_handler.save("word_frequencies", fig)
+    stats_json_handler.save("word_frequencies", word_frequencies, save_hashed=False)
 
     _, zero_shot = zip(*io.JsonFileHandler("zero-shot").yield_all())
     topic_frequencies = statistic.count_topics(zero_shot)
     fig = visualizer.visualize_treemap(topic_frequencies)
-    png_handler.save("topic_frequencies", fig)
-    stats_handler.save("topic_frequencies", topic_frequencies, save_hashed=False)
+    stats_png_handler.save("topic_frequencies", fig)
+    stats_json_handler.save("topic_frequencies", topic_frequencies, save_hashed=False)
 
     _, ner = zip(*io.JsonFileHandler("ner").yield_all())
     person_frequencies = statistic.count_persons(ner)
     fig = visualizer.visualize_wordcloud(person_frequencies)
-    png_handler.save("person_frequencies", fig)
-    stats_handler.save("person_frequencies", person_frequencies, save_hashed=False)
+    stats_png_handler.save("person_frequencies", fig)
+    stats_json_handler.save("person_frequencies", person_frequencies, save_hashed=False)
+
+    _, raw_metas = zip(*meta_handler.yield_all())
+    valid_meta = [meta for meta in raw_metas if meta.get("date")]
+    valid_meta.sort(key=lambda meta: meta["date"], reverse=True)
+    stats_json_handler.save(
+        "fresh_news",
+        {idx: meta for idx, meta in enumerate(valid_meta[:5], start=1)},
+        save_hashed=False
+    )
+
 
 
 def run_full_pipeline() -> None:
