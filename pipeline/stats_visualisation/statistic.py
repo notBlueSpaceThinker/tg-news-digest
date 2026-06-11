@@ -1,8 +1,11 @@
 from collections import Counter
 from collections.abc import Iterable
+from datetime import datetime
 
 from pipeline.preprocessing import preprocessing
+from utils import io
 
+stats_handler = io.JsonFileHandler("stats")
 
 def count_words(texts: Iterable[str]) -> dict:
     """
@@ -69,3 +72,51 @@ def count_persons(ner_predictions: Iterable[dict]) -> dict:
                 continue
             i += 1
     return person_frequencies
+
+def get_word_frequencies(top_n: int | None = 5) -> list[tuple]:
+    word_frequencies = stats_handler.load("word_frequencies", load_hashed=False)
+    word_frequencies = sorted(
+        word_frequencies.items(),
+        key=lambda x: x[1],
+        reverse=True
+    )
+    if top_n:
+        return word_frequencies[:top_n]
+    return word_frequencies
+    
+def get_topic_frequencies(top_n: int | None = 5) -> list[tuple]:
+    topic_frequencies = stats_handler.load("topic_frequencies", load_hashed=False)
+    topic_frequencies = sorted(
+        topic_frequencies.items(),
+        key=lambda x: x[1],
+        reverse=True
+    )        
+    if top_n:
+        return topic_frequencies[:top_n]
+    return topic_frequencies
+
+def get_person_frequencies(top_n: int | None = 5) -> list[tuple]:
+    person_frequencies = stats_handler.load("person_frequencies", load_hashed=False)
+    person_frequencies = sorted(
+        person_frequencies.items(),
+        key=lambda x: x[1],
+        reverse=True
+    )
+    if top_n:
+        return person_frequencies[:top_n]
+    return person_frequencies
+
+def get_fresh_news_text(top_n: int | None = 7) -> str:
+    fresh_news = stats_handler.load("fresh_news", load_hashed=False)
+    sorted_keys = sorted(fresh_news.keys(), key=lambda k: int(k))
+    if top_n:
+        sorted_keys = sorted_keys[:top_n]
+    urls = [] #дописать
+    news_list = []
+    for key in sorted_keys:
+        meta = fresh_news[key]
+        news_list.append(f"{key}. {meta["portal"]}: {meta["title"]}")
+        time = datetime.fromisoformat(meta["date"]).time()
+        news_list.append(f"Время публикации: {time}\n")
+        urls.append(meta["url"])
+    return  "\n".join(news_list)

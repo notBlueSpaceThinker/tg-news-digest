@@ -1,10 +1,10 @@
 from bs4 import BeautifulSoup
 
 from pipeline.scraping.core_utils import (
-    ScrapingConfig,
-    make_request,
-    parse_date_to_datetime
-)
+        ScrapingConfig, 
+        make_request,
+        parse_date_to_datetime
+    )
 
 
 class BaseParser():

@@ -3,11 +3,11 @@ from requests.exceptions import RequestException
 
 from config import TODAY_DATE
 from pipeline.scraping.core_utils import (
-    ScrapingConfig,
-    WrongCrawlerType,
-    make_request,
-    parse_and_format_pub_date
-)
+        ScrapingConfig,
+        WrongCrawlerType,
+        make_request,
+        parse_and_format_pub_date
+    )
 
 
 class BaseCrawler:
