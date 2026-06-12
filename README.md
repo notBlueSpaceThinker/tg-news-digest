@@ -7,35 +7,11 @@
 | `/start`          | Start bot and display the welcome message                                            |
 | `/help`           | Show available functionality and navigation help                                     |
 | `Дайджест`        | A summary of all the information that partially shows each of the possible commands  |
-| `Популярные темы` | The topic that was most frequently discussed in the media (extracted with Zero-Shot) |
+| `Популярные темы` | The topic that was most frequently discussed in the media (extracted with [Zero-Shot](https://huggingface.co/cointegrated/rubert-tiny-bilingual-nli)) |
 | `Свежие новости`  | The most recent articles parsed from local websites                                  |
-| `Личность дня`    | The most mentioned person in the media (extracted with NER)                          |
+| `Личность дня`    | The most mentioned person in the media (extracted with [NER](https://huggingface.co/Gherman/bert-base-NER-Russian))                          |
 | `Слово дня`       | The most frequently used word in the articles                                        |
-### Dependencies
-```
-# Data scraping
-beautifulsoup4==4.14.3
-lxml==5.3.2
-requests==2.33.1
 
-# Text processing and inference
-pymorphy3==2.0.6
-pymorphy3-dicts-ru==2.4.417150.4580142
-nltk==3.9.4
-torch==2.12.0
-transformers==5.9.0
-
-# Statistic and visualisation
-matplotlib==3.10.9
-seaborn==0.13.2
-squarify==0.4.4
-
-# Bot api
-pyTelegramBotAPI==4.34.0
-
-# Configuration
-environs==15.0.1
-```
 ### Setup and Start Project
 First, you need to get your `API_TOKEN` using [@BotFather](https://t.me/BotFather) and the `HF_TOKEN` from [HuggingFace](https://huggingface.co/) website.
 
@@ -105,4 +81,30 @@ python main.py
 ├── .env                        # Tokens
 ├── config.py                   # Project configuration (tokens, paths, etc.)
 └── main.py                     # Project entrypoint
+```
+
+### Dependencies
+```
+# Data scraping
+beautifulsoup4==4.14.3
+lxml==5.3.2
+requests==2.33.1
+
+# Text processing and inference
+pymorphy3==2.0.6
+pymorphy3-dicts-ru==2.4.417150.4580142
+nltk==3.9.4
+torch==2.12.0
+transformers==5.9.0
+
+# Statistic and visualisation
+matplotlib==3.10.9
+seaborn==0.13.2
+squarify==0.4.4
+
+# Bot api
+pyTelegramBotAPI==4.34.0
+
+# Configuration
+environs==15.0.1
 ```

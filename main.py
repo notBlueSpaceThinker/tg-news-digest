@@ -21,7 +21,7 @@ def main() -> None:
     """
     # pipeline_loop()
     threading.Thread(target=pipeline_loop, daemon=True).start()
-    bot.bot.polling(non_stop=True)
+    bot.bot.polling(non_stop=True, timeout=20, long_polling_timeout=15)
     
     
 if __name__ == "__main__":
