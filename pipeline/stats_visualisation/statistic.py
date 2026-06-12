@@ -1,11 +1,20 @@
 from collections import Counter
 from collections.abc import Iterable
 from datetime import datetime
+from typing import List, Tuple, Dict, Optional
+import math
+import re
 
 from pipeline.preprocessing import preprocessing
 from utils import io
 
 stats_handler = io.JsonFileHandler("stats")
+
+COLLOCATION_CONFIG = {
+    "window_size": 5,           # Размер окна для co-occurrence
+    "min_word_freq": 3,         # Минимальная частота слова для LogDice
+    "min_cooccurrence": 2,      # Минимальная частота ковстречаемости
+}
 
 def count_words(texts: Iterable[str]) -> dict:
     """
@@ -115,8 +124,270 @@ def get_fresh_news_text(top_n: int | None = 7) -> str:
     news_list = []
     for key in sorted_keys:
         meta = fresh_news[key]
-        news_list.append(f"{key}. {meta["portal"]}: {meta["title"]}")
+        news_list.append(f"{key}. {meta['portal']}: {meta['title']}")
         time = datetime.fromisoformat(meta["date"]).time()
         news_list.append(f"_Время публикации: {time}\n_")
         urls.append(meta["url"])
     return  "\n".join(news_list)
+
+
+def extract_ngrams_from_text(text: str, n: int = 3, filter_stop_words: bool = True) -> List[str]:
+    """
+    Extract n-grams from text.
+    
+    Args:
+        text (str): Input text.
+        n (int): Number of words in each n-gram (default 3 for trigrams).
+        filter_stop_words (bool): Whether to filter stop words.
+        
+    Returns:
+        List[str]: List of n-grams.
+    """
+    words = preprocessing.tokenize_by_words(text)
+
+    ngrams = []
+    for i in range(len(words) - n + 1):
+        ngram = " ".join(words[i:i+n])
+        ngrams.append(ngram)
+
+    return ngrams
+
+def count_ngrams(texts: Iterable[str], n: int = 3) -> dict:
+    """
+    Count n-gram frequencies across a collection of texts.
+    
+    Args:
+        texts (Iterable[str]): Collection of texts to process.
+        n (int): Number of words in each n-gram.
+        
+    Returns:
+        dict: With n-grams as keys and their occurrence counts as values.
+    """
+    ngram_frequencies = Counter()
+
+    for text in texts:
+        ngrams = extract_ngrams_from_text(text, n=n)
+        ngram_frequencies.update(ngrams)
+
+    return dict(ngram_frequencies)
+
+
+def calculate_logdice(cooccurrence_count: int, freq_word1: int, freq_word2: int) -> float:
+    """
+    Calculate LogDice coefficient for two words.
+    
+    Formula: logDice = 14 + log10(2 * f(w1,w2) / (f(w1) + f(w2)))
+    
+    Args:
+        cooccurrence_count (int): Frequency of word1 and word2 appearing together.
+        freq_word1 (int): Frequency of word1 in the corpus.
+        freq_word2 (int): Frequency of word2 in the corpus.
+        
+    Returns:
+        float: LogDice coefficient (range ~0-14, higher = stronger association).
+    """
+    if freq_word1 + freq_word2 == 0:
+        return 0.0
+
+    dice = (2 * cooccurrence_count) / (freq_word1 + freq_word2)
+
+    if dice > 0:
+        logdice = 14 + math.log10(dice)
+    else:
+        logdice = 0.0
+
+    return logdice
+
+
+def count_cooccurrences(texts: Iterable[str], window_size: int = 5, filter_stop_words: bool = True) -> Dict[Tuple[str, str], int]:
+    """
+    Count word cooccurrences within a sliding window.
+    
+    Args:
+        texts (Iterable[str]): Collection of texts.
+        window_size (int): Window size for cooccurrence (default 5).
+        
+    Returns:
+        dict: With word pairs as keys and cooccurrence counts as values.
+    """
+    cooccurrence_matrix = Counter()
+    
+    for text in texts:
+        words = preprocessing.tokenize_by_words(text)
+        
+        for i in range(len(words)):
+            for j in range(i + 1, min(i + window_size + 1, len(words))):
+                word_pair = tuple(sorted([words[i], words[j]]))
+                cooccurrence_matrix[word_pair] += 1
+    
+    return dict(cooccurrence_matrix)
+
+def calculate_logdice_for_corpus(
+    texts: Iterable[str], 
+    window_size: int = 5,
+    min_word_freq: int = 3,
+    min_cooccurrence: int = 2,
+    filter_stop_words: bool = True
+) -> List[Tuple[str, float, Dict]]:
+    """
+    Calculate LogDice scores for all cooccurring word pairs in the corpus.
+    
+    Args:
+        texts (Iterable[str]): Collection of texts.
+        window_size (int): Window size for cooccurrence.
+        min_word_freq (int): Minimum word frequency to consider.
+        min_cooccurrence (int): Minimum cooccurrence frequency to consider.
+        filter_stop_words (bool): Whether to filter out stop words.
+        
+    Returns:
+        List[Tuple[str, float, Dict]]: List of (word_pair, logdice_score, metadata).
+    """
+    word_frequencies = count_words(texts)
+    cooccurrence_matrix = count_cooccurrences(texts, window_size, filter_stop_words)
+    
+    results = []
+    for (word1, word2), cooccurrence_count in cooccurrence_matrix.items():
+        freq1 = word_frequencies.get(word1, 0)
+        freq2 = word_frequencies.get(word2, 0)
+
+        if freq1 < min_word_freq or freq2 < min_word_freq:
+            continue
+        if cooccurrence_count < min_cooccurrence:
+            continue
+        
+        logdice_score = calculate_logdice(cooccurrence_count, freq1, freq2)
+
+        results.append((
+            f"{word1} — {word2}",
+            logdice_score,
+            {
+                "freq1": freq1,
+                "freq2": freq2,
+                "cooccurrence": cooccurrence_count,
+                "dice": (2 * cooccurrence_count) / (freq1 + freq2)
+            }
+        ))
+    
+    results.sort(key=lambda x: x[1], reverse=True)
+    
+    return results
+
+
+def update_collocation_statistics(texts: Iterable[str], n: int = 3) -> Tuple[dict, List[Tuple]]:
+    """
+    Update collocation statistics (word trigrams and LogDice).
+    
+    Args:
+        texts (Iterable[str]): Collection of texts to process.
+        
+    Returns:
+        Tuple[dict, List[Tuple]]: (trigram_frequencies, logdice_results)
+    """
+    print("Анализ коллокаций...")
+
+    ngram_frequencies = count_ngrams(texts, n=n)
+    logdice_results = calculate_logdice_for_corpus(
+        texts,
+        window_size=COLLOCATION_CONFIG["window_size"],
+        min_word_freq=COLLOCATION_CONFIG["min_word_freq"],
+        min_cooccurrence=COLLOCATION_CONFIG["min_cooccurrence"]
+    )
+    
+    print(f"  Найдено {len(ngram_frequencies)} уникальных {n}-грамм")
+    print(f"  Найдено {len(logdice_results)} пар с LogDice")
+    
+    return ngram_frequencies, logdice_results
+
+
+def get_ngram_frequencies(n: int = 3, top_n: Optional[int] = 5) -> List[Tuple]:
+    """
+    Get top n-gram frequencies from saved stats.
+    
+    Args:
+        n (int): Size of n-gram (2 for bigrams, 3 for trigrams, etc.)
+        top_n (Optional[int]): Number of top n-grams to return.
+        
+    Returns:
+        List[Tuple]: List of (ngram, frequency) tuples.
+    """
+    filename = f"word_{n}gram_frequencies"
+    data = stats_handler.load(filename, load_hashed=False)
+
+    if not data:
+        return []
+    ngram_frequencies = data.get("data", data)
+
+    if top_n is None:
+        top_n = len(ngram_frequencies)
+
+    ngram_frequencies = sorted(
+        ngram_frequencies.items(),
+        key=lambda x: x[1],
+        reverse=True
+    )
+
+    return ngram_frequencies[:top_n]
+
+
+def get_logdice_scores(top_n: Optional[int] = 10) -> List[Tuple]:
+    """
+    Get top LogDice scores from saved stats.
+    
+    Args:
+        top_n (Optional[int]): Number of top scores to return.
+        
+    Returns:
+        List[Tuple]: List of (word_pair, logdice_score) tuples.
+    """
+    data = stats_handler.load("logdice_scores", load_hashed=False)
+
+    if not data:
+        return []
+
+    logdice_scores = data.get("data", data)
+    
+    if top_n is None:
+        top_n = len(logdice_scores)
+
+    return logdice_scores[:top_n]
+
+
+def get_collocation_summary(n: int = 3, top_n: int = 5) -> str:
+    """
+    Get a formatted summary of collocation statistics.
+    
+    Args:
+        top_n (int): Number of top items to show.
+        
+    Returns:
+        str: Formatted summary string.
+    """
+    if top_n is None or top_n <= 0:
+            top_n = 5
+    if top_n > 50:
+        top_n = 50
+        
+    summary_parts = []
+        
+    ngrams = get_ngram_frequencies(n=n, top_n=top_n)
+    if ngrams:
+        summary_parts.append(f"Топ {top_n} словесных триграмм:")
+        for i, (ngram, freq) in enumerate(ngrams, 1):
+            summary_parts.append(f"  {i:2}. '{ngram}' → {freq} раз(а)")
+    else:
+        summary_parts.append("Нет данных по триграммам")
+        
+    logdice_scores = get_logdice_scores(top_n)
+    if logdice_scores:
+        summary_parts.append(f"\nТоп {top_n} пар слов по LogDice:")
+        for i, item in enumerate(logdice_scores, 1):
+            if len(item) == 3:
+                pair, score, _ = item
+                summary_parts.append(f"  {i:2}. {pair}: {score:.3f}")
+            else:
+                pair, score = item
+                summary_parts.append(f"  {i:2}. {pair}: {score:.3f}")
+    else:
+        summary_parts.append("\nНет данных по LogDice")
+        
+    return "\n".join(summary_parts)

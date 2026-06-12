@@ -120,6 +120,18 @@ def run_analytics_pipeline() -> None:
     stats_png_handler.save("person_frequencies", fig)
     stats_json_handler.save("person_frequencies", person_frequencies, save_hashed=False)
 
+    print("Analyzing collocations...")
+    n = 3
+    ngram_frequencies, logdice_results = statistic.update_collocation_statistics(texts, n=n)
+    stats_json_handler.save(f"word_{n}gram_frequencies", {"data": ngram_frequencies}, save_hashed=False)
+    stats_json_handler.save("logdice_scores", {"data": logdice_results}, save_hashed=False)
+
+    top_ngrams = sorted(ngram_frequencies.items(), key=lambda x: x[1], reverse=True)[:10]
+    top_logdice = logdice_results[:10]
+    stats_json_handler.save(f"top_{n}grams", {"data": top_ngrams}, save_hashed=False)
+    stats_json_handler.save("top_logdice_scores", {"data": top_logdice}, save_hashed=False)
+    print(statistic.get_collocation_summary(n=n, top_n=10))
+
     _, raw_metas = zip(*meta_handler.yield_all())
     valid_meta = [meta for meta in raw_metas if meta.get("date")]
     valid_meta.sort(key=lambda meta: meta["date"], reverse=True)
