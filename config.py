@@ -43,7 +43,7 @@ try:
 except EnvError:
     pass
 
-COLOR = "#56334B"
+COLOR = "#e858a4"
 COLOR_MAP = "RdPu"
 
 PIPELINE_TIME_SLEEP = 60 * 15

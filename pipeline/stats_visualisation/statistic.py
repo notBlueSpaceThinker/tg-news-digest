@@ -1,7 +1,6 @@
 from collections import Counter
 from collections.abc import Iterable
 from datetime import datetime
-from typing import List, Tuple, Dict, Optional
 import math
 import re
 
@@ -9,12 +8,6 @@ from pipeline.preprocessing import preprocessing
 from utils import io
 
 stats_handler = io.JsonFileHandler("stats")
-
-COLLOCATION_CONFIG = {
-    "window_size": 5,           # Размер окна для co-occurrence
-    "min_word_freq": 3,         # Минимальная частота слова для LogDice
-    "min_cooccurrence": 2,      # Минимальная частота ковстречаемости
-}
 
 def count_words(texts: Iterable[str]) -> dict:
     """
@@ -130,7 +123,7 @@ def get_fresh_news_text(top_n: int | None = 7) -> str:
         urls.append(meta["url"])
     return  "\n".join(news_list)
 
-def extract_ngrams_from_text(text: str, n: int = 3) -> List[str]:
+def extract_ngrams_from_text(text: str, n: int = 3) -> list[str]:
     """
     Extract n-grams from text.
     
@@ -168,7 +161,7 @@ def count_ngrams(texts: Iterable[str], n: int = 3) -> dict:
 
     return dict(ngram_frequencies)
 
-def count_cooccurrences(texts: Iterable[str], window_size: int = 5) -> Dict[Tuple[str, str], int]:
+def count_cooccurrences(texts: Iterable[str], window_size: int = 5) -> dict[tuple[str, str], int]:
     """
     Count word cooccurrences within a sliding window.
     
@@ -249,7 +242,7 @@ def calculate_logdice_for_corpus(
 
     return logdice_scores
 
-def get_ngram_frequencies(n, top_n: int | None = 5) -> List[Tuple]:
+def get_ngram_frequencies(n, top_n: int | None = 10) -> list[tuple]:
     """
     Get top n-gram frequencies from saved stats.
     
@@ -272,7 +265,7 @@ def get_ngram_frequencies(n, top_n: int | None = 5) -> List[Tuple]:
     return ngram_frequencies
 
 
-def get_logdice_scores(top_n: int | None = 10) -> List[Tuple]:
+def get_logdice_scores(top_n: int | None = 10) -> list[tuple]:
     """
     Get top LogDice scores from saved stats.
     

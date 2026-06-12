@@ -1,10 +1,11 @@
 import matplotlib
 import matplotlib.pyplot as plt
+import seaborn as sns
 import squarify
 from matplotlib.figure import Figure
 from wordcloud import WordCloud
 
-from config import COLOR_MAP
+from config import COLOR_MAP, COLOR
 
 matplotlib.use('Agg')
 
@@ -92,3 +93,15 @@ def visualize_wordcloud(frequencies: dict[str, int], plot: bool = False) -> Figu
     if plot:
         plt.show()
     return fig
+
+def visualize_barplot(frequencies: dict[str, int], plot: bool = False) -> Figure:
+    fig, ax = plt.subplots(figsize=(15, 5))
+    sns.barplot(
+        x=frequencies.values(),
+        y=frequencies.keys(),
+        ax=ax,
+        color=COLOR
+    )
+    fig.tight_layout()
+    return fig
+    

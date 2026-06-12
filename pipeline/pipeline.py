@@ -123,15 +123,18 @@ def run_analytics_pipeline() -> None:
     n = 2
     ngram_frequencies = statistic.count_ngrams(texts, n)
     stats_json_handler.save(f"{n}gram_frequencies", ngram_frequencies, save_hashed=False)
+    fig = visualizer.visualize_barplot(dict(statistic.get_ngram_frequencies(n)))
+    stats_png_handler.save(f"{n}gram_frequencies", fig)
     n = 3
     ngram_frequencies = statistic.count_ngrams(texts, n)
     stats_json_handler.save(f"{n}gram_frequencies", ngram_frequencies, save_hashed=False)
-    n = 4
-    ngram_frequencies = statistic.count_ngrams(texts, n)
-    stats_json_handler.save(f"{n}gram_frequencies", ngram_frequencies, save_hashed=False)
+    fig = visualizer.visualize_barplot(dict(statistic.get_ngram_frequencies(n)))
+    stats_png_handler.save(f"{n}gram_frequencies", fig)
 
     logdice_scores = statistic.calculate_logdice_for_corpus(texts)
     stats_json_handler.save("logdice_scores", logdice_scores, save_hashed=False)
+    fig = visualizer.visualize_barplot(dict(statistic.get_logdice_scores()))
+    stats_png_handler.save(f"logdice_scores", fig)
 
     _, raw_metas = zip(*meta_handler.yield_all())
     valid_meta = [meta for meta in raw_metas if meta.get("date")]
