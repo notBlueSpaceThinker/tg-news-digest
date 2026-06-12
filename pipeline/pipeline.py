@@ -120,6 +120,10 @@ def run_analytics_pipeline() -> None:
     stats_png_handler.save("person_frequencies", fig)
     stats_json_handler.save("person_frequencies", person_frequencies, save_hashed=False)
 
+    print("Analyzing collocations...")
+    statistic.update_collocation_statistics(texts)
+    print(statistic.get_collocation_summary(top_n=10))
+
     _, raw_metas = zip(*meta_handler.yield_all())
     valid_meta = [meta for meta in raw_metas if meta.get("date")]
     valid_meta.sort(key=lambda meta: meta["date"], reverse=True)
