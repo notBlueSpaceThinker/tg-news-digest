@@ -101,6 +101,7 @@ transformers==5.9.0
 matplotlib==3.10.9
 seaborn==0.13.2
 squarify==0.4.4
+wordcloud==1.9.6
 
 # Bot api
 pyTelegramBotAPI==4.34.0
