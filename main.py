@@ -14,12 +14,13 @@ def pipeline_loop() -> None:
         run_full_pipeline()
         time.sleep(PIPELINE_TIME_SLEEP)
 
+
 def main() -> None:
     """
     Entrypoint for bot and pipeline.
     Starts the background pipeline thread and runs the bot polling loop.
     """
-    pipeline_loop()
+    # pipeline_loop()
     threading.Thread(target=pipeline_loop, daemon=True).start()
     bot.bot.polling(non_stop=True, timeout=20, long_polling_timeout=15)
     

@@ -1,11 +1,13 @@
 import re
-from string import punctuation
+import json
 from typing import Literal
 
 import nltk
 import pymorphy3
 from nltk.corpus import stopwords
 from nltk.tokenize import sent_tokenize, word_tokenize
+
+from config import STOP_WORDS_PATH
 
 try:
     nltk.data.find("corpora/stopwords")
@@ -14,9 +16,12 @@ except LookupError:
     nltk.download("stopwords", quiet=True)
     nltk.download("punkt_tab", quiet=True)
 
+with open(STOP_WORDS_PATH, "r", encoding="utf-8") as file:
+    STOP_WORDS = json.load(file).get("stop_words", [])
 
-STOP_WORDS = stopwords.words("russian")
+STOP_WORDS.extend(stopwords.words("russian"))
 morph = pymorphy3.MorphAnalyzer(lang='ru')
+
 
 def tokenize_by_words(text: str) -> list[str]:
     """

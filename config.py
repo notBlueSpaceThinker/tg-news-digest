@@ -32,6 +32,8 @@ SCRAPING_CONFIG = ROOT_PATH / "pipeline" / "scraping" / "scraper_config.json"
 
 MODELS_CONFIG = ROOT_PATH / "pipeline" / "inference" / "models_config.json"
 
+STOP_WORDS_PATH = ROOT_PATH / "pipeline" / "preprocessing" / "stop_words.json"
+
 HF_TOKEN = None
 API_TOKEN = None
 

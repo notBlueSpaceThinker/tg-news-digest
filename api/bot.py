@@ -39,9 +39,13 @@ def get_markup() -> types.ReplyKeyboardMarkup:
     button_news_fresh = types.KeyboardButton("Свежие новости")
     button_top_person = types.KeyboardButton("Личность дня")
     button_top_word = types.KeyboardButton("Слово дня")
+    button_bigram = types.KeyboardButton("Биграммы")
+    button_trigram = types.KeyboardButton("Триграммы")
+    button_logdice = types.KeyboardButton("Логдайс")
     markup.row(button_digest)
     markup.row(button_topics, button_news_fresh)
     markup.row(button_top_person, button_top_word)
+    markup.row(button_bigram, button_trigram, button_logdice)
     return markup
 
 @bot.message_handler(commands=["start"])
@@ -177,6 +181,78 @@ def top_word(message):
             parse_mode="Markdown"
         )
 
+@bot.message_handler(func=lambda message: message.text.lower().strip() == "биграммы")
+def bigrams(message):
+    try:
+        bot.send_photo(
+            chat_id=message.chat.id,
+            photo=("bigrams.png", png_handler.load("2gram_frequencies")),
+            caption=(
+                "*Биграммы:*\n\n" +
+                "\n".join(
+                    f"{i}. {words} — {count}"
+                    for i, (words, count) in enumerate(statistic.get_ngram_frequencies(2, top_n=5), start=1)
+                )
+            ),
+            reply_markup=get_markup(),
+            parse_mode="Markdown"
+        )
+    except FileNotFoundError:
+        bot.send_message(
+            message.chat.id,
+            "Да не тыкай ты, итак заказов много. Встань в очередь и жди",
+            reply_markup=get_markup(),
+            parse_mode="Markdown"
+        )
+
+@bot.message_handler(func=lambda message: message.text.lower().strip() == "триграммы")
+def trigrams(message):
+    try:
+        bot.send_photo(
+            chat_id=message.chat.id,
+            photo=("trigrams.png", png_handler.load("3gram_frequencies")),
+            caption=(
+                "*Триграммы:*\n\n" +
+                "\n".join(
+                    f"{i}. {words} — {count}"
+                    for i, (words, count) in enumerate(statistic.get_ngram_frequencies(3, top_n=5), start=1)
+                )
+            ),
+            reply_markup=get_markup(),
+            parse_mode="Markdown"
+        )
+    except FileNotFoundError:
+        bot.send_message(
+            message.chat.id,
+            "Да не тыкай ты, итак заказов много. Встань в очередь и жди",
+            reply_markup=get_markup(),
+            parse_mode="Markdown"
+        )
+
+@bot.message_handler(func=lambda message: message.text.lower().strip() == "логдайс")
+def logdice(message):
+    try:
+        bot.send_photo(
+            chat_id=message.chat.id,
+            photo=("logdice_scores.png", png_handler.load("logdice_scores")),
+            caption=(
+                "*Логдайс:*\n\n" +
+                "\n".join(
+                    f"{i}. {words} — {logdice}"
+                    for i, (words, logdice) in enumerate(statistic.get_logdice_scores(top_n=5), start=1)
+                )
+            ),
+            reply_markup=get_markup(),
+            parse_mode="Markdown"
+        )
+    except FileNotFoundError:
+        bot.send_message(
+            message.chat.id,
+            "Да не тыкай ты, итак заказов много. Встань в очередь и жди",
+            reply_markup=get_markup(),
+            parse_mode="Markdown"
+        )
+
 @bot.message_handler(commands=["help"])
 def help(message):
     bot.send_message(
@@ -207,7 +283,8 @@ def unknown_command(message):
     bot.send_message(
         message.chat.id,
         "Ты че сейчас выпалил? Я не разобрал единого слова\n"
-        "*Воспользуйся кнопками меню*",
+        "*Воспользуйся кнопками меню*\n\n"
+        "_Или попробуй прокричать о помощи_ \help",
         reply_markup=get_markup(),
         parse_mode="Markdown"
     )

@@ -145,7 +145,7 @@ def run_analytics_pipeline() -> None:
         save_hashed=False
     )
     
-    image.render_text(f"Дайджест\n{TODAY_DATE.today()}", DATA_STATS / "digest.png")
+    image.render_text(f"Дайджест\n{TODAY_DATE.strftime("%d.%m.%Y")}", DATA_STATS / "digest.png")
 
 def run_full_pipeline() -> None:
     """
