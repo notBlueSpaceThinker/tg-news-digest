@@ -104,37 +104,62 @@ def run_analytics_pipeline() -> None:
 
     _, texts = zip(*io.TextFileHandler("lemmatized").yield_all())
     word_frequencies = statistic.count_words(texts)
-    fig = visualizer.visualize_wordcloud(word_frequencies)
-    stats_png_handler.save("word_frequencies", fig)
-    stats_json_handler.save("word_frequencies", word_frequencies, save_hashed=False)
+    try:
+        fig = visualizer.visualize_wordcloud(word_frequencies)
+    except ValueError:
+        print("Error with word freq")
+    else:
+        stats_png_handler.save("word_frequencies", fig)
+        stats_json_handler.save("word_frequencies", word_frequencies, save_hashed=False)
 
     _, zero_shot = zip(*io.JsonFileHandler("zero-shot").yield_all())
     topic_frequencies = statistic.count_topics(zero_shot)
-    fig = visualizer.visualize_treemap(topic_frequencies)
-    stats_png_handler.save("topic_frequencies", fig)
-    stats_json_handler.save("topic_frequencies", topic_frequencies, save_hashed=False)
+    try:
+        fig = visualizer.visualize_treemap(topic_frequencies)
+    except ValueError:
+        print("Error topic freq")
+    else:
+        stats_png_handler.save("topic_frequencies", fig)
+        stats_json_handler.save("topic_frequencies", topic_frequencies, save_hashed=False)
 
     _, ner = zip(*io.JsonFileHandler("ner").yield_all())
     person_frequencies = statistic.count_persons(ner)
-    fig = visualizer.visualize_wordcloud(person_frequencies)
-    stats_png_handler.save("person_frequencies", fig)
-    stats_json_handler.save("person_frequencies", person_frequencies, save_hashed=False)
+    try:
+        fig = visualizer.visualize_wordcloud(person_frequencies)
+    except ValueError:
+        print("Error with person freq")
+    else:
+        stats_png_handler.save("person_frequencies", fig)
+        stats_json_handler.save("person_frequencies", person_frequencies, save_hashed=False)
+
 
     n = 2
     ngram_frequencies = statistic.count_ngrams(texts, n)
     stats_json_handler.save(f"{n}gram_frequencies", ngram_frequencies, save_hashed=False)
-    fig = visualizer.visualize_barplot(dict(statistic.get_ngram_frequencies(n)))
-    stats_png_handler.save(f"{n}gram_frequencies", fig)
+    try:
+        fig = visualizer.visualize_barplot(dict(statistic.get_ngram_frequencies(n)))
+    except ValueError:
+        print("Error with Bigrams")
+    else:
+        stats_png_handler.save(f"{n}gram_frequencies", fig)
     n = 3
-    ngram_frequencies = statistic.count_ngrams(texts, n)
-    stats_json_handler.save(f"{n}gram_frequencies", ngram_frequencies, save_hashed=False)
-    fig = visualizer.visualize_barplot(dict(statistic.get_ngram_frequencies(n)))
-    stats_png_handler.save(f"{n}gram_frequencies", fig)
+    try:
+        ngram_frequencies = statistic.count_ngrams(texts, n)
+        stats_json_handler.save(f"{n}gram_frequencies", ngram_frequencies, save_hashed=False)
+        fig = visualizer.visualize_barplot(dict(statistic.get_ngram_frequencies(n)))
+    except ValueError:
+        print("Error with Trigrams")
+    else:    
+        stats_png_handler.save(f"{n}gram_frequencies", fig)
 
-    logdice_scores = statistic.calculate_logdice_for_corpus(texts)
-    stats_json_handler.save("logdice_scores", logdice_scores, save_hashed=False)
-    fig = visualizer.visualize_barplot(dict(statistic.get_logdice_scores()))
-    stats_png_handler.save(f"logdice_scores", fig)
+    try:
+        logdice_scores = statistic.calculate_logdice_for_corpus(texts)
+        stats_json_handler.save("logdice_scores", logdice_scores, save_hashed=False)
+        fig = visualizer.visualize_barplot(dict(statistic.get_logdice_scores()))
+    except ValueError:
+        print("Error with LogDice")
+    else:
+        stats_png_handler.save(f"logdice_scores", fig)
 
     _, raw_metas = zip(*meta_handler.yield_all())
     valid_meta = [meta for meta in raw_metas if meta.get("date")]
